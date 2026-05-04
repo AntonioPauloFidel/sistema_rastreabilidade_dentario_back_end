@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: sirde_bd
+    restart: always
+    environment:
+      POSTGRES_USER: sirde
+      POSTGRES_PASSWORD: sirde@123
+      POSTGRES_DB: sirde
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
