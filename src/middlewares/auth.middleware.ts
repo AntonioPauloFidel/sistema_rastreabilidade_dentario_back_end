@@ -23,7 +23,7 @@ export async function ensureAuthenticated(
  
     const payload = verificarToken(token);
  
-    const usuario = await prisma.usuario.findUnique({
+    const pessoa = await prisma.pessoa.findUnique({
       where: { id: payload.sub },
       select: {
         id: true,
@@ -32,13 +32,13 @@ export async function ensureAuthenticated(
       }
     });
  
-    if (!usuario || !usuario.ativo) {
+    if (!pessoa || !pessoa.ativo) {
       return res.status(401).json({ message: 'Usuário não autorizado' });
     }
  
     req.usuario = {
-      id: usuario.id,
-      email: usuario.email
+      id: pessoa.id,
+      email: pessoa.email
     };
  
     return next();

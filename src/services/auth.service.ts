@@ -13,12 +13,12 @@ function isUniqueConstraintError(error: unknown) {
 
 export class AuthService {
   async registrar(data: RegisterInput) {
-    const usuarioExistente = await prisma.usuario.findUnique({
+    const pessoaExistente = await prisma.pessoa.findUnique({
       where: { email: data.email },
       select: { id: true }
     });
  
-    if (usuarioExistente) {
+    if (pessoaExistente) {
       throw new AppError('E-mail já cadastrado', 409);
     }
  
@@ -27,51 +27,62 @@ export class AuthService {
     try {
       const usuario = await prisma.usuario.create({
         data: {
-          nome: data.nome,
-          email: data.email,
-          senhaHash
+          senhaHash,
+          pessoa: {
+            create: {
+              nome: data.nome,
+              email: data.email
+            }
+          }
         },
         select: usuarioPublicSelect
       });
 
       const token = gerarToken({
         sub: usuario.id,
-        email: usuario.email
+        email: usuario.pessoa?.email
       });
  
       return { usuario, token };
     } catch (error) {
-      // Protege contra corrida entre a checagem de e-mail e a criação do usuário.
       if (isUniqueConstraintError(error)) {
         throw new AppError('E-mail já cadastrado', 409);
       }
-
       throw error;
     }
   }
  
   async login(data: LoginInput) {
-    const usuario = await prisma.usuario.findUnique({
-      where: { email: data.email }
+    const pessoa = await prisma.pessoa.findUnique({
+      where: { email: data.email },
+      select: {
+        id: true,
+        ativo: true,
+        usuario: {
+          select: {
+            senhaHash: true
+          }
+        }
+      }
     });
  
-    if (!usuario) {
+    if (!pessoa) {
       throw new AppError('Credenciais inválidas', 401);
     }
  
-    if (!usuario.ativo) {
+    if (!pessoa.ativo) {
       throw new AppError('Usuário inativo', 403);
     }
  
-    const senhaValida = await bcrypt.compare(data.senha, usuario.senhaHash);
+    const senhaValida = await bcrypt.compare(data.senha, pessoa.usuario.senhaHash);
  
     if (!senhaValida) {
       throw new AppError('Credenciais inválidas', 401);
     }
  
     const token = gerarToken({
-      sub: usuario.id,
-      email: usuario.email
+      sub: pessoa.id,
+      email: data.email
     });
  
     return { token };

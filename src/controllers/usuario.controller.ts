@@ -7,8 +7,7 @@ export class UsuarioController {
   async listar(req: Request, res: Response, next: NextFunction) {
     try {
       const usuarios = await prisma.usuario.findMany({
-        select: usuarioPublicSelect,
-        orderBy: { criadoEm: 'desc' }
+        select: usuarioPublicSelect
       });
  
       return res.status(200).json({ usuarios });
