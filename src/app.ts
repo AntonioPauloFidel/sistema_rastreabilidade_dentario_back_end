@@ -6,7 +6,7 @@ import { errorHandler, notFound } from './middlewares/error.middleware';
 export const app = express();
  
 app.disable('x-powered-by');
-app.use(cors());
+app.use(cors({ origin: true, credentials: true }));
 app.use(express.json({ limit: '1mb' }));
  
 // Endpoint simples para health checks de container/orquestrador.

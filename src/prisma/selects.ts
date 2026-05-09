@@ -2,6 +2,7 @@ import { Prisma } from '@prisma/client';
 
 export const usuarioPublicSelect = {
   id: true,
+  perfil: true,
   pessoa: {
     select: {
       nome: true,
