@@ -1,26 +1,113 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
 }
 
-model  Usuario {
-  id           String    @id @default(uuid())
-  senhaHash    String    @map("senha_hash")
-  pessoa       Pessoa?
-  endereco     Endereco?
+enum PerfilUsuario {
+  ADMIN
+  BIOBANCO_OPERADOR
+  BIOBANCO_GESTOR
+  CLINICA
+  DENTISTA
+  INSTITUICAO_SOLICITANTE
+  AUDITOR
+}
+
+enum StatusCadastro {
+  ATIVA
+  INATIVA
+}
+
+enum TipoInstituicao {
+  ESCOLA
+  FACULDADE
+  UNIVERSIDADE
+  LABORATORIO
+  EMPRESA
+  SUS
+  OUTRA
+}
+
+enum StatusDente {
+  RECEBIDO
+  EM_TRIAGEM
+  HIGIENIZADO
+  ESTERILIZADO
+  ARMAZENADO
+  RESERVADO
+  CEDIDO
+  DESCARTADO
+  PERDIDO
+  DIVERGENTE
+}
+
+enum TipoDente {
+  INCISIVO
+  CANINO
+  PRE_MOLAR
+  MOLAR
+  DECIDUO
+  OUTRO
+}
+
+enum CondicaoDente {
+  INTEGRO
+  RESTAURADO
+  CARIADO
+  FRAGMENTADO
+  OUTRA
+}
+
+enum StatusSolicitacao {
+  PENDENTE_ANALISE
+  APROVADA
+  RECUSADA
+  PARCIALMENTE_ATENDIDA
+  ATENDIDA
+  CANCELADA
+}
+
+enum FinalidadeSolicitacao {
+  ENSINO
+  PESQUISA
+  TREINAMENTO
+  OUTRA
+}
+
+model Usuario {
+  id        String        @id @default(uuid())
+  senhaHash String        @map("senha_hash")
+  perfil    PerfilUsuario @default(BIOBANCO_OPERADOR)
+  pessoa    Pessoa?
+  endereco  Endereco?
+
+  movimentacoes MovimentacaoDente[] @relation("ResponsavelMovimentacao")
+  auditorias    AuditoriaEvento[]
 
   @@map("usuarios")
+}
+
+model Pessoa {
+  id           String   @id @map("usuario_id")
+  nome         String
+  email        String   @unique
+  ativo        Boolean  @default(true)
+  criadoEm     DateTime @default(now()) @map("criado_em")
+  atualizadoEm DateTime @updatedAt @map("atualizado_em")
+
+  usuario Usuario @relation(fields: [id], references: [id], onDelete: Cascade)
+
+  @@map("pessoas")
 }
 
 model Endereco {
   id String @id @default(uuid())
 
-  usuarioId String  @unique @map("usuario_id")
-  usuario   Usuario @relation(fields: [usuarioId], references: [id])
+  usuarioId String?  @unique @map("usuario_id")
+  usuario   Usuario? @relation(fields: [usuarioId], references: [id])
 
   bairro       String
   complemento  String?
@@ -30,19 +117,242 @@ model Endereco {
   criadoEm     DateTime @default(now()) @map("criado_em")
   atualizadoEm DateTime @updatedAt @map("atualizado_em")
 
+  instituicao Instituicao?
+  clinica     Clinica?
+
   @@map("enderecos")
 }
 
-model Pessoa {
-  id           String    @id @map("usuario_id")
+model Instituicao {
+  id           String         @id @default(uuid())
   nome         String
-  email        String    @unique
-  ativo        Boolean   @default(true)
-  criadoEm     DateTime  @default(now()) @map("criado_em")
-  atualizadoEm DateTime  @updatedAt @map("atualizado_em")
+  tipo         TipoInstituicao
+  cnpj         String         @unique
+  email        String?
+  telefone     String?
+  status       StatusCadastro @default(ATIVA)
+  enderecoId   String?        @unique @map("endereco_id")
+  endereco     Endereco?      @relation(fields: [enderecoId], references: [id])
+  criadoEm     DateTime       @default(now()) @map("criado_em")
+  atualizadoEm DateTime       @updatedAt @map("atualizado_em")
 
-  usuario      Usuario   @relation(fields: [id], references: [id], onDelete: Cascade)
+  solicitacoes SolicitacaoDente[]
+  cessoes      CessaoDente[]
 
-  @@map("pessoas")
+  @@map("instituicoes")
 }
 
+model Clinica {
+  id           String         @id @default(uuid())
+  nome         String
+  cnpj         String?        @unique
+  responsavel  String?
+  email        String?
+  telefone     String?
+  status       StatusCadastro @default(ATIVA)
+  enderecoId   String?        @unique @map("endereco_id")
+  endereco     Endereco?      @relation(fields: [enderecoId], references: [id])
+  criadoEm     DateTime       @default(now()) @map("criado_em")
+  atualizadoEm DateTime       @updatedAt @map("atualizado_em")
+
+  dentistas Dentista[]
+  remessas  RemessaEntrada[]
+
+  @@map("clinicas")
+}
+
+model Dentista {
+  id           String         @id @default(uuid())
+  nome         String
+  cro          String
+  ufCro        String         @map("uf_cro")
+  email        String?
+  telefone     String?
+  status       StatusCadastro @default(ATIVA)
+  clinicaId    String?        @map("clinica_id")
+  clinica      Clinica?       @relation(fields: [clinicaId], references: [id])
+  criadoEm     DateTime       @default(now()) @map("criado_em")
+  atualizadoEm DateTime       @updatedAt @map("atualizado_em")
+
+  @@unique([cro, ufCro])
+  @@map("dentistas")
+}
+
+model Doador {
+  id            String   @id @default(uuid())
+  cpfHash       String   @unique @map("cpf_hash")
+  cpfUltimos4   String   @map("cpf_ultimos_4")
+  nome          String?
+  dataNascimento DateTime? @map("data_nascimento")
+  contato       String?
+  criadoEm      DateTime @default(now()) @map("criado_em")
+  atualizadoEm  DateTime @updatedAt @map("atualizado_em")
+
+  dentes Dente[]
+  termos TermoConsentimento[]
+
+  @@map("doadores")
+}
+
+model TermoConsentimento {
+  id              String   @id @default(uuid())
+  tipo            String
+  versao          String
+  dataAssinatura  DateTime @map("data_assinatura")
+  validade        DateTime?
+  observacao      String?
+  doadorId        String   @map("doador_id")
+  doador          Doador   @relation(fields: [doadorId], references: [id])
+  criadoEm        DateTime @default(now()) @map("criado_em")
+
+  @@map("termos_consentimento")
+}
+
+model RemessaEntrada {
+  id              String   @id @default(uuid())
+  codigo          String   @unique
+  origemTipo      String   @map("origem_tipo")
+  dataEnvio       DateTime? @map("data_envio")
+  dataRecebimento DateTime? @map("data_recebimento")
+  status          String   @default("RECEBIDA")
+  clinicaId       String?  @map("clinica_id")
+  clinica         Clinica? @relation(fields: [clinicaId], references: [id])
+  criadoEm        DateTime @default(now()) @map("criado_em")
+  atualizadoEm    DateTime @updatedAt @map("atualizado_em")
+
+  dentes Dente[]
+
+  @@map("remessas_entrada")
+}
+
+model Dente {
+  id              String        @id @default(uuid())
+  codigoRastreio  String        @unique @map("codigo_rastreio")
+  tipo            TipoDente
+  numeracao       String?
+  condicao        CondicaoDente
+  statusAtual     StatusDente   @default(RECEBIDO) @map("status_atual")
+  observacao      String?
+  doadorId        String?       @map("doador_id")
+  doador          Doador?       @relation(fields: [doadorId], references: [id])
+  remessaId       String?       @map("remessa_id")
+  remessa         RemessaEntrada? @relation(fields: [remessaId], references: [id])
+  localAtualId    String?       @map("local_atual_id")
+  localAtual      LocalArmazenamento? @relation(fields: [localAtualId], references: [id])
+  criadoEm        DateTime      @default(now()) @map("criado_em")
+  atualizadoEm    DateTime      @updatedAt @map("atualizado_em")
+
+  movimentacoes MovimentacaoDente[]
+  itensSolicitacao ItemSolicitacao[]
+  cessoes CessaoDente[]
+
+  @@map("dentes")
+}
+
+model LocalArmazenamento {
+  id           String         @id @default(uuid())
+  nome         String
+  tipo         String
+  sala         String?
+  armario      String?
+  prateleira   String?
+  caixa        String?
+  status       StatusCadastro @default(ATIVA)
+  criadoEm     DateTime       @default(now()) @map("criado_em")
+  atualizadoEm DateTime       @updatedAt @map("atualizado_em")
+
+  dentesAtuais Dente[]
+  movimentacoesOrigem MovimentacaoDente[] @relation("OrigemLocal")
+  movimentacoesDestino MovimentacaoDente[] @relation("DestinoLocal")
+
+  @@map("locais_armazenamento")
+}
+
+model MovimentacaoDente {
+  id             String       @id @default(uuid())
+  denteId        String       @map("dente_id")
+  dente          Dente        @relation(fields: [denteId], references: [id])
+  origemLocalId  String?      @map("origem_local_id")
+  origemLocal    LocalArmazenamento? @relation("OrigemLocal", fields: [origemLocalId], references: [id])
+  destinoLocalId String?      @map("destino_local_id")
+  destinoLocal   LocalArmazenamento? @relation("DestinoLocal", fields: [destinoLocalId], references: [id])
+  statusAnterior StatusDente? @map("status_anterior")
+  statusNovo     StatusDente  @map("status_novo")
+  motivo         String
+  observacao     String?
+  responsavelId  String?      @map("responsavel_id")
+  responsavel    Usuario?     @relation("ResponsavelMovimentacao", fields: [responsavelId], references: [id])
+  criadoEm       DateTime     @default(now()) @map("criado_em")
+
+  @@map("movimentacoes_dente")
+}
+
+model SolicitacaoDente {
+  id              String                @id @default(uuid())
+  instituicaoId   String                @map("instituicao_id")
+  instituicao     Instituicao           @relation(fields: [instituicaoId], references: [id])
+  finalidade      FinalidadeSolicitacao
+  justificativa   String
+  status          StatusSolicitacao     @default(PENDENTE_ANALISE)
+  motivoDecisao   String?               @map("motivo_decisao")
+  criadoEm        DateTime              @default(now()) @map("criado_em")
+  atualizadoEm    DateTime              @updatedAt @map("atualizado_em")
+
+  itens  ItemSolicitacao[]
+  cessoes CessaoDente[]
+
+  @@map("solicitacoes_dente")
+}
+
+model ItemSolicitacao {
+  id                 String  @id @default(uuid())
+  solicitacaoId      String  @map("solicitacao_id")
+  solicitacao        SolicitacaoDente @relation(fields: [solicitacaoId], references: [id], onDelete: Cascade)
+  tipoDente          TipoDente @map("tipo_dente")
+  quantidade         Int
+  requisitos         String?
+  quantidadeAtendida Int     @default(0) @map("quantidade_atendida")
+  denteId            String? @map("dente_id")
+  dente              Dente?  @relation(fields: [denteId], references: [id])
+
+  @@map("itens_solicitacao")
+}
+
+model CessaoDente {
+  id             String   @id @default(uuid())
+  solicitacaoId  String   @map("solicitacao_id")
+  solicitacao    SolicitacaoDente @relation(fields: [solicitacaoId], references: [id])
+  instituicaoId  String   @map("instituicao_id")
+  instituicao    Instituicao @relation(fields: [instituicaoId], references: [id])
+  denteId        String   @map("dente_id")
+  dente          Dente    @relation(fields: [denteId], references: [id])
+  responsavelId  String?  @map("responsavel_id")
+  dataCessao     DateTime @default(now()) @map("data_cessao")
+  observacao     String?
+
+  @@map("cessoes_dente")
+}
+
+model ConsultaPublica {
+  id                String   @id @default(uuid())
+  cpfHash           String   @map("cpf_hash")
+  ipHash            String?  @map("ip_hash")
+  encontrado        Boolean
+  quantidadeRegistros Int    @default(0) @map("quantidade_registros")
+  criadoEm          DateTime @default(now()) @map("criado_em")
+
+  @@map("consultas_publicas")
+}
+
+model AuditoriaEvento {
+  id         String   @id @default(uuid())
+  usuarioId  String?  @map("usuario_id")
+  usuario    Usuario? @relation(fields: [usuarioId], references: [id])
+  acao       String
+  entidade   String
+  entidadeId String?  @map("entidade_id")
+  dados      Json?
+  criadoEm   DateTime @default(now()) @map("criado_em")
+
+  @@map("auditoria_eventos")
+}

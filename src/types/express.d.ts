@@ -4,6 +4,7 @@ declare global {
       usuario?: {
         id: string;
         email: string;
+        perfil: import('@prisma/client').PerfilUsuario;
       };
     }
   }

@@ -28,6 +28,7 @@
   "description": "API SIRDE com Express, TypeScript, Prisma e PostgreSQL",
   "main": "dist/server.js",
   "scripts": {
+    "postinstall": "prisma generate",
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
