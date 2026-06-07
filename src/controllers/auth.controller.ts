@@ -2,6 +2,13 @@ import { Request, Response, NextFunction } from 'express';
 import { AuthService } from '../services/auth.service';
 import { loginSchema, registerSchema } from '../schemas/auth.schema';
 import { AppError } from '../errors/app-error';
+import {
+  clearAuthCookies,
+  getCookie,
+  REFRESH_TOKEN_COOKIE,
+  setAccessTokenCookie,
+  setAuthCookies
+} from '../utils/cookies';
  
 const authService = new AuthService();
  
@@ -10,7 +17,8 @@ export class AuthController {
     try {
       const data = registerSchema.parse(req.body);
       const result = await authService.registrar(data);
-      return res.status(201).json(result);
+      setAuthCookies(res, result.token, result.refreshToken);
+      return res.status(201).json({ usuario: result.usuario, token: result.token });
     } catch (error) {
       return next(error);
     }
@@ -20,7 +28,8 @@ export class AuthController {
     try {
       const data = loginSchema.parse(req.body);
       const result = await authService.login(data);
-      return res.status(200).json(result);
+      setAuthCookies(res, result.token, result.refreshToken);
+      return res.status(200).json({ token: result.token });
     } catch (error) {
       return next(error);
     }
@@ -32,5 +41,28 @@ export class AuthController {
     }
 
     return res.status(200).json({ usuario: req.usuario });
+  }
+
+  async refresh(req: Request, res: Response, next: NextFunction) {
+    try {
+      const refreshToken = getCookie(req, REFRESH_TOKEN_COOKIE);
+
+      if (!refreshToken) {
+        throw new AppError('Refresh token nao informado', 401);
+      }
+
+      const result = await authService.refresh(refreshToken);
+      setAccessTokenCookie(res, result.token);
+
+      return res.status(200).json({ token: result.token });
+    } catch (error) {
+      clearAuthCookies(res);
+      return next(error);
+    }
+  }
+
+  async logout(req: Request, res: Response) {
+    clearAuthCookies(res);
+    return res.status(204).send();
   }
 }

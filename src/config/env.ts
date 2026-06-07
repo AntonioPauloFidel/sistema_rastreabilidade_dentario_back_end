@@ -11,7 +11,11 @@ const envSchema = z.object({
   JWT_EXPIRES_IN: z
     .string()
     .regex(/^\d+[smhd]$/, 'JWT_EXPIRES_IN deve usar formatos como 15m, 1h ou 7d')
-    .default('30m'),
+    .default('5m'),
+  REFRESH_TOKEN_EXPIRES_IN: z
+    .string()
+    .regex(/^\d+[smhd]$/, 'REFRESH_TOKEN_EXPIRES_IN deve usar formatos como 15m, 1h ou 7d')
+    .default('7d'),
   BCRYPT_SALT_ROUNDS: z.coerce.number().int().min(8).max(14).default(10)
 }).superRefine((env, ctx) => {
   if (env.NODE_ENV === 'production' && env.JWT_SECRET.length < 32) {

@@ -14,9 +14,6 @@ export function errorHandler(
   res: Response,
   next: NextFunction
 ) {
-  console.log('CHEGOU NO ERROR HANDLER');
-  console.error('ERRO REAL:', error);
-
   void req;
   void next;
 
@@ -33,8 +30,8 @@ export function errorHandler(
     });
   }
 
+  console.error(error);
   return res.status(500).json({
-    message: 'Erro interno do servidor',
-    error: error instanceof Error ? error.message : String(error)
+    message: 'Erro interno do servidor'
   });
 }

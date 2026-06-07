@@ -1,13 +1,41 @@
 import { Router } from 'express';
+import { auditoriaRoutes } from './auditoria.routes';
 import { authRoutes } from './auth.routes';
+import { cessaoRoutes } from './cessao.routes';
+import { clinicaRoutes } from './clinica.routes';
+import { dashboardRoutes } from './dashboard.routes';
+import { denteRoutes } from './dente.routes';
+import { dentistaRoutes } from './dentista.routes';
+import { doadorRoutes } from './doador.routes';
 import { enderecoRoutes } from './endereco.routes';
+import { instituicaoRoutes } from './instituicao.routes';
+import { localRoutes } from './local.routes';
+import { movimentacaoRoutes } from './movimentacao.routes';
+import { publicRoutes } from './public.routes';
+import { remessaRoutes } from './remessa.routes';
+import { solicitacaoRoutes } from './solicitacao.routes';
+import { termoRoutes } from './termo.routes';
 import { usuarioRoutes } from './usuario.routes';
 import { ensureAuthenticated } from '../middlewares/auth.middleware';
 
 const router = Router();
  
 router.use('/auth', authRoutes);
+router.use('/public', publicRoutes);
 router.use('/usuarios', ensureAuthenticated, usuarioRoutes);
 router.use('/enderecos', ensureAuthenticated, enderecoRoutes);
+router.use('/instituicoes', ensureAuthenticated, instituicaoRoutes);
+router.use('/clinicas', ensureAuthenticated, clinicaRoutes);
+router.use('/dentistas', ensureAuthenticated, dentistaRoutes);
+router.use('/doadores', ensureAuthenticated, doadorRoutes);
+router.use('/termos-consentimento', ensureAuthenticated, termoRoutes);
+router.use('/remessas-entrada', ensureAuthenticated, remessaRoutes);
+router.use('/dentes', ensureAuthenticated, denteRoutes);
+router.use('/locais-armazenamento', ensureAuthenticated, localRoutes);
+router.use('/movimentacoes', ensureAuthenticated, movimentacaoRoutes);
+router.use('/solicitacoes', ensureAuthenticated, solicitacaoRoutes);
+router.use('/cessoes', ensureAuthenticated, cessaoRoutes);
+router.use('/dashboard', ensureAuthenticated, dashboardRoutes);
+router.use('/auditoria', ensureAuthenticated, auditoriaRoutes);
  
 export { router };

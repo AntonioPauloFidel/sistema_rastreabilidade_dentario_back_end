@@ -1,14 +1,20 @@
 import { Request, Response, NextFunction } from 'express';
+import bcrypt from 'bcrypt';
 import { prisma } from '../prisma/client';
 import { AppError } from '../errors/app-error';
 import { usuarioPublicSelect } from '../prisma/selects';
+import { env } from '../config/env';
+import {
+  alterarPerfilUsuarioSchema,
+  alterarStatusUsuarioSchema,
+  criarUsuarioSchema
+} from '../schemas/sirde.schema';
  
 export class UsuarioController {
   async listar(req: Request, res: Response, next: NextFunction) {
     try {
       const usuarios = await prisma.usuario.findMany({
-        select: usuarioPublicSelect,
-        orderBy: { criadoEm: 'desc' }
+        select: usuarioPublicSelect
       });
  
       return res.status(200).json({ usuarios });
@@ -30,6 +36,69 @@ export class UsuarioController {
         throw new AppError('Usuário não encontrado', 404);
       }
  
+      return res.status(200).json({ usuario });
+    } catch (error) {
+      return next(error);
+    }
+  }
+
+  async criar(req: Request, res: Response, next: NextFunction) {
+    try {
+      const data = criarUsuarioSchema.parse(req.body);
+      const senhaHash = await bcrypt.hash(data.senha, env.BCRYPT_SALT_ROUNDS);
+
+      const usuario = await prisma.usuario.create({
+        data: {
+          senhaHash,
+          perfil: data.perfil,
+          pessoa: {
+            create: {
+              nome: data.nome,
+              email: data.email
+            }
+          }
+        },
+        select: usuarioPublicSelect
+      });
+
+      return res.status(201).json({ usuario });
+    } catch (error) {
+      return next(error);
+    }
+  }
+
+  async alterarStatus(req: Request, res: Response, next: NextFunction) {
+    try {
+      const id = this.getParamId(req.params.id);
+      const { ativo } = alterarStatusUsuarioSchema.parse(req.body);
+
+      const usuario = await prisma.usuario.update({
+        where: { id },
+        data: {
+          pessoa: {
+            update: { ativo }
+          }
+        },
+        select: usuarioPublicSelect
+      });
+
+      return res.status(200).json({ usuario });
+    } catch (error) {
+      return next(error);
+    }
+  }
+
+  async alterarPerfil(req: Request, res: Response, next: NextFunction) {
+    try {
+      const id = this.getParamId(req.params.id);
+      const { perfil } = alterarPerfilUsuarioSchema.parse(req.body);
+
+      const usuario = await prisma.usuario.update({
+        where: { id },
+        data: { perfil },
+        select: usuarioPublicSelect
+      });
+
       return res.status(200).json({ usuario });
     } catch (error) {
       return next(error);
