@@ -1,0 +1,49 @@
+name: Auto-promover para main
+
+on:
+  push:
+    branches:
+      - desenvolvimento
+
+jobs:
+  promover:
+    name: Aguardar 15 min e promover para main
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout completo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Aguardar 15 minutos
+        run: sleep 900
+
+      - name: Configurar identidade do bot
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Atualizar branches remotas
+        run: git fetch origin
+
+      - name: Fazer merge de desenvolvimento para main
+        run: |
+          git checkout main
+          git pull origin main
+          git merge origin/desenvolvimento --no-ff -m "chore: promocao automatica desenvolvimento -> main [skip ci]"
+          git push origin main
+
+      - name: Notificar sucesso
+        if: success()
+        run: |
+          echo "Promocao concluida com sucesso!"
+          echo "Commit: $(git rev-parse HEAD)"
+
+      - name: Notificar falha
+        if: failure()
+        run: echo "Falha na promocao automatica. Verifique conflitos entre desenvolvimento e main."
