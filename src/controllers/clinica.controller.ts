@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
-import { clinicaSchema } from '../schemas/sirde.schema';
+import { clinicaListQuerySchema, clinicaSchema } from '../schemas/sirde.schema';
 import { ClinicaService } from '../services/cadastros.service';
 
 const clinicaService = new ClinicaService();
@@ -7,7 +7,8 @@ const clinicaService = new ClinicaService();
 export class ClinicaController {
   async listar(req: Request, res: Response, next: NextFunction) {
     try {
-      return res.status(200).json({ clinicas: await clinicaService.listar() });
+      const filtros = clinicaListQuerySchema.parse(req.query);
+      return res.status(200).json({ clinicas: await clinicaService.listar(filtros) });
     } catch (error) {
       return next(error);
     }

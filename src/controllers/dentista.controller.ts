@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
-import { dentistaSchema } from '../schemas/sirde.schema';
+import { dentistaListQuerySchema, dentistaSchema } from '../schemas/sirde.schema';
 import { DentistaService } from '../services/cadastros.service';
 
 const dentistaService = new DentistaService();
@@ -7,7 +7,8 @@ const dentistaService = new DentistaService();
 export class DentistaController {
   async listar(req: Request, res: Response, next: NextFunction) {
     try {
-      return res.status(200).json({ dentistas: await dentistaService.listar() });
+      const filtros = dentistaListQuerySchema.parse(req.query);
+      return res.status(200).json({ dentistas: await dentistaService.listar(filtros) });
     } catch (error) {
       return next(error);
     }

@@ -7,16 +7,29 @@ import { env } from '../config/env';
 import {
   alterarPerfilUsuarioSchema,
   alterarStatusUsuarioSchema,
-  criarUsuarioSchema
+  criarUsuarioSchema,
+  usuarioListQuerySchema
 } from '../schemas/sirde.schema';
  
 export class UsuarioController {
   async listar(req: Request, res: Response, next: NextFunction) {
     try {
+      const filtros = usuarioListQuerySchema.parse(req.query);
+      const where: any = {};
+
+      if (filtros.perfil) {
+        where.perfil = filtros.perfil;
+      }
+
+      if (filtros.ativo !== undefined) {
+        where.pessoa = { ativo: filtros.ativo };
+      }
+
       const usuarios = await prisma.usuario.findMany({
+        where,
         select: usuarioPublicSelect
       });
- 
+
       return res.status(200).json({ usuarios });
     } catch (error) {
       return next(error);
