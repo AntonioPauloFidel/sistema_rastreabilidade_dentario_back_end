@@ -17,6 +17,7 @@ import { solicitacaoRoutes } from './solicitacao.routes';
 import { termoRoutes } from './termo.routes';
 import { usuarioRoutes } from './usuario.routes';
 import { ensureAuthenticated } from '../middlewares/auth.middleware';
+import configRoutes from './config.routes';
 
 const router = Router();
  
@@ -37,5 +38,6 @@ router.use('/solicitacoes', ensureAuthenticated, solicitacaoRoutes);
 router.use('/cessoes', ensureAuthenticated, cessaoRoutes);
 router.use('/dashboard', ensureAuthenticated, dashboardRoutes);
 router.use('/auditoria', ensureAuthenticated, auditoriaRoutes);
+router.use('/configuracoes', ensureAuthenticated, configRoutes);
  
 export { router };

@@ -356,3 +356,17 @@ model AuditoriaEvento {
 
   @@map("auditoria_eventos")
 }
+
+model ConfiguracaoBiobanco {
+  id                 String   @id
+  nomeOficial        String
+  sigla              String
+  responsavelTecnico String
+  email              String
+  telefone           String?
+  endereco           String
+  logotipoUrl        String?
+  atualizadoEm       DateTime @updatedAt
+
+  @@map("configuracoes_biobanco")
+}
