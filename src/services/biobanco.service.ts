@@ -1,4 +1,4 @@
-import { Prisma, StatusDente } from '@prisma/client';
+import { Prisma, StatusDente, TipoDente } from '@prisma/client';
 import { AppError } from '../errors/app-error';
 import { prisma } from '../prisma/client';
 import {
@@ -80,8 +80,23 @@ export class RemessaEntradaService {
 }
 
 export class DenteService {
-  async listar() {
+  async listar(filters?: { status?: StatusDente; tipo?: TipoDente; remessaId?: string }) {
+    const where: Prisma.DenteWhereInput = {};
+
+    if (filters?.status) {
+      where.statusAtual = filters.status;
+    }
+
+    if (filters?.tipo) {
+      where.tipo = filters.tipo;
+    }
+
+    if (filters?.remessaId) {
+      where.remessaId = filters.remessaId;
+    }
+
     return prisma.dente.findMany({
+      where,
       orderBy: { criadoEm: 'desc' },
       include: { doador: true, remessa: true, localAtual: true }
     });
@@ -161,8 +176,22 @@ export class DenteService {
 }
 
 export class MovimentacaoService {
-  async listar() {
+  async listar(filters?: { denteId?: string; localId?: string }) {
+    const where: Prisma.MovimentacaoDenteWhereInput = {};
+
+    if (filters?.denteId) {
+      where.denteId = filters.denteId;
+    }
+
+    if (filters?.localId) {
+      where.OR = [
+        { origemLocalId: filters.localId },
+        { destinoLocalId: filters.localId }
+      ];
+    }
+
     return prisma.movimentacaoDente.findMany({
+      where,
       orderBy: { criadoEm: 'desc' },
       include: { dente: true, origemLocal: true, destinoLocal: true }
     });

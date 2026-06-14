@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
-import { denteSchema, alterarStatusDenteSchema, idParamSchema } from '../schemas/sirde.schema';
+import { denteSchema, alterarStatusDenteSchema, denteListQuerySchema, idParamSchema } from '../schemas/sirde.schema';
 import { DenteService } from '../services/biobanco.service';
 
 const denteService = new DenteService();
@@ -7,7 +7,8 @@ const denteService = new DenteService();
 export class DenteController {
   async listar(req: Request, res: Response, next: NextFunction) {
     try {
-      return res.status(200).json({ dentes: await denteService.listar() });
+      const filtros = denteListQuerySchema.parse(req.query);
+      return res.status(200).json({ dentes: await denteService.listar(filtros) });
     } catch (error) {
       return next(error);
     }

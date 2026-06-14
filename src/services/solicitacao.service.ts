@@ -1,4 +1,4 @@
-import { StatusSolicitacao, StatusDente } from '@prisma/client';
+import { Prisma, StatusSolicitacao, StatusDente } from '@prisma/client';
 import { AppError } from '../errors/app-error';
 import { prisma } from '../prisma/client';
 import { AuditoriaService } from './auditoria.service';
@@ -7,8 +7,19 @@ import { CessaoInput, SolicitacaoInput } from '../schemas/sirde.schema';
 const auditoriaService = new AuditoriaService();
 
 export class SolicitacaoService {
-  async listar() {
+  async listar(filters?: { status?: StatusSolicitacao; instituicaoId?: string }) {
+    const where: Prisma.SolicitacaoDenteWhereInput = {};
+
+    if (filters?.status) {
+      where.status = filters.status;
+    }
+
+    if (filters?.instituicaoId) {
+      where.instituicaoId = filters.instituicaoId;
+    }
+
     return prisma.solicitacaoDente.findMany({
+      where,
       orderBy: { criadoEm: 'desc' },
       include: { instituicao: true, itens: true, cessoes: true }
     });
