@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import { denteSchema, alterarStatusDenteSchema, denteListQuerySchema, idParamSchema } from '../schemas/sirde.schema';
 import { DenteService } from '../services/biobanco.service';
+import { paginatedResponse } from '../utils/pagination';
 
 const denteService = new DenteService();
 
@@ -8,7 +9,8 @@ export class DenteController {
   async listar(req: Request, res: Response, next: NextFunction) {
     try {
       const filtros = denteListQuerySchema.parse(req.query);
-      return res.status(200).json({ dentes: await denteService.listar(filtros) });
+      const result = await denteService.listar(filtros);
+      return res.status(200).json(paginatedResponse(result, { page: filtros.page, limit: filtros.limit }));
     } catch (error) {
       return next(error);
     }

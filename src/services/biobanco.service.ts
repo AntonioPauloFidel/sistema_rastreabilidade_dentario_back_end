@@ -70,8 +70,19 @@ export class TermoConsentimentoService {
 }
 
 export class RemessaEntradaService {
-  async listar() {
-    return prisma.remessaEntrada.findMany({ orderBy: { criadoEm: 'desc' }, include: { clinica: true } });
+  async listar(filters?: { page?: number; limit?: number }) {
+    const page = filters?.page ?? 1;
+    const limit = filters?.limit ?? 20;
+    const total = await prisma.remessaEntrada.count();
+
+    const data = await prisma.remessaEntrada.findMany({
+      orderBy: { criadoEm: 'desc' },
+      include: { clinica: true },
+      skip: (page - 1) * limit,
+      take: limit
+    });
+
+    return { data, total };
   }
 
   async criar(data: RemessaInput) {
@@ -80,7 +91,7 @@ export class RemessaEntradaService {
 }
 
 export class DenteService {
-  async listar(filters?: { status?: StatusDente; tipo?: TipoDente; remessaId?: string }) {
+  async listar(filters?: { status?: StatusDente; tipo?: TipoDente; remessaId?: string; page?: number; limit?: number }) {
     const where: Prisma.DenteWhereInput = {};
 
     if (filters?.status) {
@@ -95,11 +106,19 @@ export class DenteService {
       where.remessaId = filters.remessaId;
     }
 
-    return prisma.dente.findMany({
+    const page = filters?.page ?? 1;
+    const limit = filters?.limit ?? 20;
+    const total = await prisma.dente.count({ where });
+
+    const data = await prisma.dente.findMany({
       where,
       orderBy: { criadoEm: 'desc' },
-      include: { doador: true, remessa: true, localAtual: true }
+      include: { doador: true, remessa: true, localAtual: true },
+      skip: (page - 1) * limit,
+      take: limit
     });
+
+    return { data, total };
   }
 
   async buscarPorId(id: string) {
@@ -176,7 +195,7 @@ export class DenteService {
 }
 
 export class MovimentacaoService {
-  async listar(filters?: { denteId?: string; localId?: string }) {
+  async listar(filters?: { denteId?: string; localId?: string; page?: number; limit?: number }) {
     const where: Prisma.MovimentacaoDenteWhereInput = {};
 
     if (filters?.denteId) {
@@ -190,11 +209,19 @@ export class MovimentacaoService {
       ];
     }
 
-    return prisma.movimentacaoDente.findMany({
+    const page = filters?.page ?? 1;
+    const limit = filters?.limit ?? 20;
+    const total = await prisma.movimentacaoDente.count({ where });
+
+    const data = await prisma.movimentacaoDente.findMany({
       where,
       orderBy: { criadoEm: 'desc' },
-      include: { dente: true, origemLocal: true, destinoLocal: true }
+      include: { dente: true, origemLocal: true, destinoLocal: true },
+      skip: (page - 1) * limit,
+      take: limit
     });
+
+    return { data, total };
   }
 
   async porDente(denteId: string) {

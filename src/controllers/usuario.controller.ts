@@ -4,13 +4,14 @@ import { prisma } from '../prisma/client';
 import { AppError } from '../errors/app-error';
 import { usuarioPublicSelect } from '../prisma/selects';
 import { env } from '../config/env';
+import { paginatedResponse } from '../utils/pagination';
 import {
   alterarPerfilUsuarioSchema,
   alterarStatusUsuarioSchema,
   criarUsuarioSchema,
   usuarioListQuerySchema
 } from '../schemas/sirde.schema';
- 
+
 export class UsuarioController {
   async listar(req: Request, res: Response, next: NextFunction) {
     try {
@@ -25,12 +26,15 @@ export class UsuarioController {
         where.pessoa = { ativo: filtros.ativo };
       }
 
+      const total = await prisma.usuario.count({ where });
       const usuarios = await prisma.usuario.findMany({
         where,
-        select: usuarioPublicSelect
+        select: usuarioPublicSelect,
+        skip: (filtros.page - 1) * filtros.limit,
+        take: filtros.limit
       });
 
-      return res.status(200).json({ usuarios });
+      return res.status(200).json(paginatedResponse({ data: usuarios, total }, { page: filtros.page, limit: filtros.limit }));
     } catch (error) {
       return next(error);
     }
