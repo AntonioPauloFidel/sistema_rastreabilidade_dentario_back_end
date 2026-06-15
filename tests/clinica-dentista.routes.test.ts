@@ -4,12 +4,14 @@ import request from 'supertest';
 
 const clinicaServiceMock = {
   buscarPorId: vi.fn(),
-  atualizar: vi.fn()
+  atualizar: vi.fn(),
+  desativar: vi.fn()
 };
 
 const dentistaServiceMock = {
   buscarPorId: vi.fn(),
-  atualizar: vi.fn()
+  atualizar: vi.fn(),
+  desativar: vi.fn()
 };
 
 vi.doMock('../src/middlewares/auth.middleware', () => ({
@@ -27,14 +29,16 @@ vi.doMock('../src/services/cadastros.service', async (importOriginal) => {
     listar: vi.fn(),
     buscarPorId: clinicaServiceMock.buscarPorId,
     criar: vi.fn(),
-    atualizar: clinicaServiceMock.atualizar
+    atualizar: clinicaServiceMock.atualizar,
+    desativar: clinicaServiceMock.desativar
   };
 
   const dentistaServiceMockStatic = {
     listar: vi.fn(),
     buscarPorId: dentistaServiceMock.buscarPorId,
     criar: vi.fn(),
-    atualizar: dentistaServiceMock.atualizar
+    atualizar: dentistaServiceMock.atualizar,
+    desativar: dentistaServiceMock.desativar
   };
 
   return {
@@ -59,8 +63,10 @@ describe('Clinica e Dentista routes', () => {
   beforeEach(() => {
     clinicaServiceMock.buscarPorId.mockReset();
     clinicaServiceMock.atualizar.mockReset();
+    clinicaServiceMock.desativar.mockReset();
     dentistaServiceMock.buscarPorId.mockReset();
     dentistaServiceMock.atualizar.mockReset();
+    dentistaServiceMock.desativar.mockReset();
   });
 
   describe('Clinica', () => {
@@ -118,6 +124,35 @@ describe('Clinica e Dentista routes', () => {
           cnpj: '12345678000199',
           email: 'novo@clinica.com',
           telefone: '987654321'
+        }
+      });
+    });
+
+    it('PATCH /api/clinicas/:id/status desativa a clínica', async () => {
+      clinicaServiceMock.desativar.mockResolvedValue({
+        id: '00000000-0000-4000-8000-000000000001',
+        nome: 'Clinica Teste',
+        tipo: 'LABORATORIO',
+        cnpj: '12345678000199',
+        email: 'teste@clinica.com',
+        telefone: '123456789',
+        status: 'INATIVA'
+      });
+
+      const response = await request(app)
+        .patch('/api/clinicas/00000000-0000-4000-8000-000000000001/status')
+        .send({ ativo: false });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({
+        clinica: {
+          id: '00000000-0000-4000-8000-000000000001',
+          nome: 'Clinica Teste',
+          tipo: 'LABORATORIO',
+          cnpj: '12345678000199',
+          email: 'teste@clinica.com',
+          telefone: '123456789',
+          status: 'INATIVA'
         }
       });
     });
@@ -183,6 +218,37 @@ describe('Clinica e Dentista routes', () => {
           email: 'novo@dentista.com',
           telefone: '987654321',
           clinicaId: '00000000-0000-4000-8000-000000000001'
+        }
+      });
+    });
+
+    it('PATCH /api/dentistas/:id/status desativa o dentista', async () => {
+      dentistaServiceMock.desativar.mockResolvedValue({
+        id: '00000000-0000-4000-8000-000000000002',
+        nome: 'Dentista Teste',
+        cro: '12345',
+        ufCro: 'SP',
+        email: 'teste@dentista.com',
+        telefone: '123456789',
+        clinicaId: '00000000-0000-4000-8000-000000000001',
+        status: 'INATIVA'
+      });
+
+      const response = await request(app)
+        .patch('/api/dentistas/00000000-0000-4000-8000-000000000002/status')
+        .send({ ativo: false });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({
+        dentista: {
+          id: '00000000-0000-4000-8000-000000000002',
+          nome: 'Dentista Teste',
+          cro: '12345',
+          ufCro: 'SP',
+          email: 'teste@dentista.com',
+          telefone: '123456789',
+          clinicaId: '00000000-0000-4000-8000-000000000001',
+          status: 'INATIVA'
         }
       });
     });

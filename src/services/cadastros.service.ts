@@ -9,7 +9,7 @@ function isUniqueConstraintError(error: unknown) {
 
 export class InstituicaoService {
   async listar(filters?: { tipo?: string }) {
-    const where: Prisma.InstituicaoWhereInput = {};
+    const where: Prisma.InstituicaoWhereInput = { status: 'ATIVA' };
     if (filters?.tipo) {
       where.tipo = filters.tipo as any;
     }
@@ -44,7 +44,7 @@ export class InstituicaoService {
 
 export class ClinicaService {
   async listar(filters?: { nome?: string }) {
-    const where: Prisma.ClinicaWhereInput = {};
+    const where: Prisma.ClinicaWhereInput = { status: 'ATIVA' };
     if (filters?.nome) {
       where.nome = { contains: filters.nome, mode: 'insensitive' };
     }
@@ -75,11 +75,16 @@ export class ClinicaService {
       throw error;
     }
   }
+
+  async desativar(id: string) {
+    await this.buscarPorId(id);
+    return prisma.clinica.update({ where: { id }, data: { status: 'INATIVA' } });
+  }
 }
 
 export class DentistaService {
   async listar(filters?: { clinicaId?: string }) {
-    const where: Prisma.DentistaWhereInput = {};
+    const where: Prisma.DentistaWhereInput = { status: 'ATIVA' };
     if (filters?.clinicaId) {
       where.clinicaId = filters.clinicaId;
     }
@@ -109,6 +114,11 @@ export class DentistaService {
       if (isUniqueConstraintError(error)) throw new AppError('CRO ja cadastrado para esta UF', 409);
       throw error;
     }
+  }
+
+  async desativar(id: string) {
+    await this.buscarPorId(id);
+    return prisma.dentista.update({ where: { id }, data: { status: 'INATIVA' } });
   }
 }
 

@@ -31,6 +31,13 @@ export const dentistaSchema = z.object({
   clinicaId: z.string().uuid().optional()
 });
 
+export const alterarStatusCadastroSchema = z.object({
+  ativo: z.boolean().refine((value) => value === false, {
+    message: 'Apenas a desativacao eh suportada',
+    path: ['ativo']
+  })
+});
+
 export const doadorSchema = z.object({
   cpf: z.string().trim().min(11),
   nome: optionalText,
