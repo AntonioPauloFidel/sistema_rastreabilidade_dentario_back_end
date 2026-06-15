@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import { alterarStatusCadastroSchema, dentistaListQuerySchema, dentistaSchema, idParamSchema } from '../schemas/sirde.schema';
 import { DentistaService } from '../services/cadastros.service';
+import { paginatedResponse } from '../utils/pagination';
 
 const dentistaService = new DentistaService();
 
@@ -8,7 +9,8 @@ export class DentistaController {
   async listar(req: Request, res: Response, next: NextFunction) {
     try {
       const filtros = dentistaListQuerySchema.parse(req.query);
-      return res.status(200).json({ dentistas: await dentistaService.listar(filtros) });
+      const result = await dentistaService.listar(filtros);
+      return res.status(200).json(paginatedResponse(result, { page: filtros.page, limit: filtros.limit }));
     } catch (error) {
       return next(error);
     }

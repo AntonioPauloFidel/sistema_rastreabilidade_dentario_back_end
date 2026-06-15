@@ -22,10 +22,13 @@ export class AuditoriaService {
     });
   }
 
-  async listar() {
-    return prisma.auditoriaEvento.findMany({
+  async listar(filters?: { page?: number; limit?: number }) {
+    const page = filters?.page ?? 1;
+    const limit = filters?.limit ?? 20;
+    const total = await prisma.auditoriaEvento.count();
+
+    const data = await prisma.auditoriaEvento.findMany({
       orderBy: { criadoEm: 'desc' },
-      take: 200,
       include: {
         usuario: {
           select: {
@@ -36,7 +39,11 @@ export class AuditoriaService {
             }
           }
         }
-      }
+      },
+      skip: (page - 1) * limit,
+      take: limit
     });
+
+    return { data, total };
   }
 }

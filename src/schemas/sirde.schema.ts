@@ -137,11 +137,16 @@ export const consultaPublicaSchema = z.object({
   cpf: z.string().trim().min(11)
 });
 
+export const paginationQuerySchema = z.object({
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().default(20)
+});
+
 export const denteListQuerySchema = z.object({
   status: alterarStatusDenteSchema.shape.statusNovo.optional(),
   tipo: denteSchema.shape.tipo.optional(),
   remessaId: z.string().uuid().optional()
-});
+}).merge(paginationQuerySchema);
 
 export const solicitacaoListQuerySchema = z.object({
   status: z.enum([
@@ -153,12 +158,12 @@ export const solicitacaoListQuerySchema = z.object({
     'CANCELADA'
   ]).optional(),
   instituicaoId: z.string().uuid().optional()
-});
+}).merge(paginationQuerySchema);
 
 export const movimentacaoListQuerySchema = z.object({
   denteId: z.string().uuid().optional(),
   localId: z.string().uuid().optional()
-});
+}).merge(paginationQuerySchema);
 
 export const criarUsuarioSchema = z.object({
   nome: z.string().trim().min(3),
@@ -178,19 +183,25 @@ export const criarUsuarioSchema = z.object({
 export const usuarioListQuerySchema = z.object({
   ativo: z.coerce.boolean().optional(),
   perfil: criarUsuarioSchema.shape.perfil.optional()
-});
+}).merge(paginationQuerySchema);
 
 export const instituicaoListQuerySchema = z.object({
   tipo: instituicaoSchema.shape.tipo.optional()
-});
+}).merge(paginationQuerySchema);
 
 export const clinicaListQuerySchema = z.object({
   nome: z.string().trim().min(1).optional()
-});
+}).merge(paginationQuerySchema);
 
 export const dentistaListQuerySchema = z.object({
   clinicaId: z.string().uuid().optional()
-});
+}).merge(paginationQuerySchema);
+
+export const localListQuerySchema = z.object({}).merge(paginationQuerySchema);
+
+export const remessaListQuerySchema = z.object({}).merge(paginationQuerySchema);
+
+export const auditoriaListQuerySchema = z.object({}).merge(paginationQuerySchema);
 
 export const alterarStatusUsuarioSchema = z.object({
   ativo: z.boolean()

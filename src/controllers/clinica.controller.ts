@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import { alterarStatusCadastroSchema, clinicaListQuerySchema, clinicaSchema, idParamSchema } from '../schemas/sirde.schema';
 import { ClinicaService } from '../services/cadastros.service';
+import { paginatedResponse } from '../utils/pagination';
 
 const clinicaService = new ClinicaService();
 
@@ -8,7 +9,8 @@ export class ClinicaController {
   async listar(req: Request, res: Response, next: NextFunction) {
     try {
       const filtros = clinicaListQuerySchema.parse(req.query);
-      return res.status(200).json({ clinicas: await clinicaService.listar(filtros) });
+      const result = await clinicaService.listar(filtros);
+      return res.status(200).json(paginatedResponse(result, { page: filtros.page, limit: filtros.limit }));
     } catch (error) {
       return next(error);
     }

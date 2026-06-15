@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import { idParamSchema, instituicaoListQuerySchema, instituicaoSchema } from '../schemas/sirde.schema';
 import { InstituicaoService } from '../services/cadastros.service';
+import { paginatedResponse } from '../utils/pagination';
 
 const instituicaoService = new InstituicaoService();
 
@@ -8,7 +9,8 @@ export class InstituicaoController {
   async listar(req: Request, res: Response, next: NextFunction) {
     try {
       const filtros = instituicaoListQuerySchema.parse(req.query);
-      return res.status(200).json({ instituicoes: await instituicaoService.listar(filtros) });
+      const result = await instituicaoService.listar(filtros);
+      return res.status(200).json(paginatedResponse(result, { page: filtros.page, limit: filtros.limit }));
     } catch (error) {
       return next(error);
     }

@@ -1,13 +1,16 @@
 import { NextFunction, Request, Response } from 'express';
-import { remessaSchema } from '../schemas/sirde.schema';
+import { remessaListQuerySchema, remessaSchema } from '../schemas/sirde.schema';
 import { RemessaEntradaService } from '../services/biobanco.service';
+import { paginatedResponse } from '../utils/pagination';
 
 const remessaService = new RemessaEntradaService();
 
 export class RemessaController {
   async listar(req: Request, res: Response, next: NextFunction) {
     try {
-      return res.status(200).json({ remessas: await remessaService.listar() });
+      const filtros = remessaListQuerySchema.parse(req.query);
+      const result = await remessaService.listar(filtros);
+      return res.status(200).json(paginatedResponse(result, { page: filtros.page, limit: filtros.limit }));
     } catch (error) {
       return next(error);
     }

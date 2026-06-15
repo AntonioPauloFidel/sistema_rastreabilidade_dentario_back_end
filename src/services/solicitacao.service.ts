@@ -4,7 +4,7 @@ import { prisma } from '../prisma/client';
 import { CessaoInput, SolicitacaoInput } from '../schemas/sirde.schema';
 
 export class SolicitacaoService {
-  async listar(filters?: { status?: StatusSolicitacao; instituicaoId?: string }) {
+  async listar(filters?: { status?: StatusSolicitacao; instituicaoId?: string; page?: number; limit?: number }) {
     const where: Prisma.SolicitacaoDenteWhereInput = {};
 
     if (filters?.status) {
@@ -15,11 +15,19 @@ export class SolicitacaoService {
       where.instituicaoId = filters.instituicaoId;
     }
 
-    return prisma.solicitacaoDente.findMany({
+    const page = filters?.page ?? 1;
+    const limit = filters?.limit ?? 20;
+    const total = await prisma.solicitacaoDente.count({ where });
+
+    const data = await prisma.solicitacaoDente.findMany({
       where,
       orderBy: { criadoEm: 'desc' },
-      include: { instituicao: true, itens: true, cessoes: true }
+      include: { instituicao: true, itens: true, cessoes: true },
+      skip: (page - 1) * limit,
+      take: limit
     });
+
+    return { data, total };
   }
 
   async criar(data: SolicitacaoInput) {

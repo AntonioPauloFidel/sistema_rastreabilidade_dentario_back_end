@@ -8,12 +8,25 @@ function isUniqueConstraintError(error: unknown) {
 }
 
 export class InstituicaoService {
-  async listar(filters?: { tipo?: string }) {
+  async listar(filters?: { tipo?: string; page?: number; limit?: number }) {
     const where: Prisma.InstituicaoWhereInput = { status: 'ATIVA' };
     if (filters?.tipo) {
       where.tipo = filters.tipo as any;
     }
-    return prisma.instituicao.findMany({ where, orderBy: { nome: 'asc' }, include: { endereco: true } });
+
+    const page = filters?.page ?? 1;
+    const limit = filters?.limit ?? 20;
+    const total = await prisma.instituicao.count({ where });
+
+    const data = await prisma.instituicao.findMany({
+      where,
+      orderBy: { nome: 'asc' },
+      include: { endereco: true },
+      skip: (page - 1) * limit,
+      take: limit
+    });
+
+    return { data, total };
   }
 
   async buscarPorId(id: string) {
@@ -43,12 +56,25 @@ export class InstituicaoService {
 }
 
 export class ClinicaService {
-  async listar(filters?: { nome?: string }) {
+  async listar(filters?: { nome?: string; page?: number; limit?: number }) {
     const where: Prisma.ClinicaWhereInput = { status: 'ATIVA' };
     if (filters?.nome) {
       where.nome = { contains: filters.nome, mode: 'insensitive' };
     }
-    return prisma.clinica.findMany({ where, orderBy: { nome: 'asc' }, include: { endereco: true } });
+
+    const page = filters?.page ?? 1;
+    const limit = filters?.limit ?? 20;
+    const total = await prisma.clinica.count({ where });
+
+    const data = await prisma.clinica.findMany({
+      where,
+      orderBy: { nome: 'asc' },
+      include: { endereco: true },
+      skip: (page - 1) * limit,
+      take: limit
+    });
+
+    return { data, total };
   }
 
   async buscarPorId(id: string) {
@@ -83,12 +109,25 @@ export class ClinicaService {
 }
 
 export class DentistaService {
-  async listar(filters?: { clinicaId?: string }) {
+  async listar(filters?: { clinicaId?: string; page?: number; limit?: number }) {
     const where: Prisma.DentistaWhereInput = { status: 'ATIVA' };
     if (filters?.clinicaId) {
       where.clinicaId = filters.clinicaId;
     }
-    return prisma.dentista.findMany({ where, orderBy: { nome: 'asc' }, include: { clinica: true } });
+
+    const page = filters?.page ?? 1;
+    const limit = filters?.limit ?? 20;
+    const total = await prisma.dentista.count({ where });
+
+    const data = await prisma.dentista.findMany({
+      where,
+      orderBy: { nome: 'asc' },
+      include: { clinica: true },
+      skip: (page - 1) * limit,
+      take: limit
+    });
+
+    return { data, total };
   }
 
   async buscarPorId(id: string) {
@@ -123,8 +162,18 @@ export class DentistaService {
 }
 
 export class LocalArmazenamentoService {
-  async listar() {
-    return prisma.localArmazenamento.findMany({ orderBy: { nome: 'asc' } });
+  async listar(filters?: { page?: number; limit?: number }) {
+    const page = filters?.page ?? 1;
+    const limit = filters?.limit ?? 20;
+    const total = await prisma.localArmazenamento.count();
+
+    const data = await prisma.localArmazenamento.findMany({
+      orderBy: { nome: 'asc' },
+      skip: (page - 1) * limit,
+      take: limit
+    });
+
+    return { data, total };
   }
 
   async criar(data: LocalInput) {

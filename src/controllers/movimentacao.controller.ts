@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import { idParamSchema, movimentacaoListQuerySchema, movimentacaoSchema } from '../schemas/sirde.schema';
 import { MovimentacaoService } from '../services/biobanco.service';
+import { paginatedResponse } from '../utils/pagination';
 
 const movimentacaoService = new MovimentacaoService();
 
@@ -8,7 +9,8 @@ export class MovimentacaoController {
   async listar(req: Request, res: Response, next: NextFunction) {
     try {
       const filtros = movimentacaoListQuerySchema.parse(req.query);
-      return res.status(200).json({ movimentacoes: await movimentacaoService.listar(filtros) });
+      const result = await movimentacaoService.listar(filtros);
+      return res.status(200).json(paginatedResponse(result, { page: filtros.page, limit: filtros.limit }));
     } catch (error) {
       return next(error);
     }
