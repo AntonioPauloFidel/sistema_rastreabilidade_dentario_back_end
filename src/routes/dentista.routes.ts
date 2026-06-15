@@ -12,5 +12,7 @@ router.post(
   authorize(PerfilUsuario.ADMIN, PerfilUsuario.BIOBANCO_GESTOR, PerfilUsuario.CLINICA),
   controller.criar.bind(controller)
 );
+router.get('/:id', controller.buscarPorId.bind(controller));
+router.put('/:id', authorize(PerfilUsuario.ADMIN, PerfilUsuario.BIOBANCO_GESTOR, PerfilUsuario.CLINICA), controller.atualizar.bind(controller));
 
 export { router as dentistaRoutes };

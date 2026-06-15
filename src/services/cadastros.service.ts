@@ -51,9 +51,25 @@ export class ClinicaService {
     return prisma.clinica.findMany({ where, orderBy: { nome: 'asc' }, include: { endereco: true } });
   }
 
+  async buscarPorId(id: string) {
+    const clinica = await prisma.clinica.findUnique({ where: { id }, include: { endereco: true } });
+    if (!clinica) throw new AppError('Clinica nao encontrada', 404);
+    return clinica;
+  }
+
   async criar(data: ClinicaInput) {
     try {
       return await prisma.clinica.create({ data });
+    } catch (error) {
+      if (isUniqueConstraintError(error)) throw new AppError('CNPJ da clinica ja cadastrado', 409);
+      throw error;
+    }
+  }
+
+  async atualizar(id: string, data: ClinicaInput) {
+    await this.buscarPorId(id);
+    try {
+      return await prisma.clinica.update({ where: { id }, data });
     } catch (error) {
       if (isUniqueConstraintError(error)) throw new AppError('CNPJ da clinica ja cadastrado', 409);
       throw error;
@@ -70,9 +86,25 @@ export class DentistaService {
     return prisma.dentista.findMany({ where, orderBy: { nome: 'asc' }, include: { clinica: true } });
   }
 
+  async buscarPorId(id: string) {
+    const dentista = await prisma.dentista.findUnique({ where: { id }, include: { clinica: true } });
+    if (!dentista) throw new AppError('Dentista nao encontrado', 404);
+    return dentista;
+  }
+
   async criar(data: DentistaInput) {
     try {
       return await prisma.dentista.create({ data });
+    } catch (error) {
+      if (isUniqueConstraintError(error)) throw new AppError('CRO ja cadastrado para esta UF', 409);
+      throw error;
+    }
+  }
+
+  async atualizar(id: string, data: DentistaInput) {
+    await this.buscarPorId(id);
+    try {
+      return await prisma.dentista.update({ where: { id }, data });
     } catch (error) {
       if (isUniqueConstraintError(error)) throw new AppError('CRO ja cadastrado para esta UF', 409);
       throw error;
