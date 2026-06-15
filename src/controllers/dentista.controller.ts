@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
-import { dentistaListQuerySchema, dentistaSchema, idParamSchema } from '../schemas/sirde.schema';
+import { alterarStatusCadastroSchema, dentistaListQuerySchema, dentistaSchema, idParamSchema } from '../schemas/sirde.schema';
 import { DentistaService } from '../services/cadastros.service';
 
 const dentistaService = new DentistaService();
@@ -37,6 +37,16 @@ export class DentistaController {
       const { id } = idParamSchema.parse(req.params);
       const data = dentistaSchema.parse(req.body);
       return res.status(200).json({ dentista: await dentistaService.atualizar(id, data) });
+    } catch (error) {
+      return next(error);
+    }
+  }
+
+  async desativar(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = idParamSchema.parse(req.params);
+      alterarStatusCadastroSchema.parse(req.body);
+      return res.status(200).json({ dentista: await dentistaService.desativar(id) });
     } catch (error) {
       return next(error);
     }

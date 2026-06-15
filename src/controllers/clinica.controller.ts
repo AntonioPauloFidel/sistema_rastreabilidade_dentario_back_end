@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
-import { clinicaListQuerySchema, clinicaSchema, idParamSchema } from '../schemas/sirde.schema';
+import { alterarStatusCadastroSchema, clinicaListQuerySchema, clinicaSchema, idParamSchema } from '../schemas/sirde.schema';
 import { ClinicaService } from '../services/cadastros.service';
 
 const clinicaService = new ClinicaService();
@@ -37,6 +37,16 @@ export class ClinicaController {
       const { id } = idParamSchema.parse(req.params);
       const data = clinicaSchema.parse(req.body);
       return res.status(200).json({ clinica: await clinicaService.atualizar(id, data) });
+    } catch (error) {
+      return next(error);
+    }
+  }
+
+  async desativar(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = idParamSchema.parse(req.params);
+      alterarStatusCadastroSchema.parse(req.body);
+      return res.status(200).json({ clinica: await clinicaService.desativar(id) });
     } catch (error) {
       return next(error);
     }
