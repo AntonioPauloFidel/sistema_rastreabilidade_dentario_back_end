@@ -246,6 +246,9 @@ model Dente {
   itensSolicitacao ItemSolicitacao[]
   cessoes CessaoDente[]
 
+  @@index([statusAtual])
+  @@index([doadorId])
+  @@index([remessaId])
   @@map("dentes")
 }
 
@@ -284,6 +287,7 @@ model MovimentacaoDente {
   responsavel    Usuario?     @relation("ResponsavelMovimentacao", fields: [responsavelId], references: [id])
   criadoEm       DateTime     @default(now()) @map("criado_em")
 
+  @@index([denteId])
   @@map("movimentacoes_dente")
 }
 
@@ -301,6 +305,8 @@ model SolicitacaoDente {
   itens  ItemSolicitacao[]
   cessoes CessaoDente[]
 
+  @@index([instituicaoId])
+  @@index([status])
   @@map("solicitacoes_dente")
 }
 
@@ -315,6 +321,7 @@ model ItemSolicitacao {
   denteId            String? @map("dente_id")
   dente              Dente?  @relation(fields: [denteId], references: [id])
 
+  @@index([solicitacaoId])
   @@map("itens_solicitacao")
 }
 
@@ -330,6 +337,8 @@ model CessaoDente {
   dataCessao     DateTime @default(now()) @map("data_cessao")
   observacao     String?
 
+  @@index([solicitacaoId])
+  @@index([denteId])
   @@map("cessoes_dente")
 }
 
