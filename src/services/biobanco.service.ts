@@ -122,6 +122,19 @@ export class DenteService {
     return { data, total };
   }
 
+  async exportar(filters: { status?: string; tipo?: string; from?: string; to?: string }) {
+    const where: any = {};
+    if (filters.status) where.statusAtual = filters.status;
+    if (filters.tipo) where.tipo = filters.tipo;
+    if (filters.from || filters.to) {
+      where.criadoEm = {};
+      if (filters.from) where.criadoEm.gte = new Date(filters.from);
+      if (filters.to) where.criadoEm.lte = new Date(filters.to);
+    }
+
+    return prisma.dente.findMany({ where, orderBy: { criadoEm: 'desc' }, include: { doador: true, remessa: true, localAtual: true } });
+  }
+
   async buscarPorId(id: string) {
     const dente = await prisma.dente.findUnique({
       where: { id },
