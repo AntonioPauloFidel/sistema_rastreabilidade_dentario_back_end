@@ -127,6 +127,12 @@ export const cessaoSchema = z.object({
   observacao: optionalText
 });
 
+export const alertaEstoqueSchema = z.object({
+  tipoDente: denteSchema.shape.tipo,
+  limiteMinimo: z.coerce.number().int().min(0),
+  ativo: z.boolean().optional()
+});
+
 export const consultaPublicaSchema = z.object({
   cpf: z.string().trim().min(11)
 });
@@ -166,3 +172,4 @@ export type MovimentacaoInput = z.infer<typeof movimentacaoSchema>;
 export type SolicitacaoInput = z.infer<typeof solicitacaoSchema>;
 export type CessaoInput = z.infer<typeof cessaoSchema>;
 export type CriarUsuarioInput = z.infer<typeof criarUsuarioSchema>;
+export type AlertaEstoqueInput = z.infer<typeof alertaEstoqueSchema>;
