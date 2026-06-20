@@ -99,6 +99,33 @@ export class CessaoService {
         }
       });
 
+      // Verifica alertas de estoque configurados para o tipo do dente
+      const alerta = await (tx as any).alertaEstoque.findFirst({ where: { tipoDente: dente.tipo, ativo: true } });
+      if (alerta) {
+        const estoqueAtual = await tx.dente.count({
+          where: {
+            tipo: dente.tipo,
+            statusAtual: { notIn: [StatusDente.CEDIDO, StatusDente.DESCARTADO, StatusDente.PERDIDO] }
+          }
+        });
+
+        if (estoqueAtual < alerta.limiteMinimo) {
+          await tx.auditoriaEvento.create({
+            data: {
+              acao: 'ALERTA_ESTOQUE',
+              entidade: 'AlertaEstoque',
+              entidadeId: alerta.id,
+              usuarioId: usuarioId,
+              dados: {
+                tipoDente: dente.tipo,
+                limiteMinimo: alerta.limiteMinimo,
+                estoqueAtual
+              }
+            }
+          });
+        }
+      }
+
       return cessao;
     });
   }

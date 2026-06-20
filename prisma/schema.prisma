@@ -345,6 +345,16 @@ model CessaoDente {
   @@map("cessoes_dente")
 }
 
+model AlertaEstoque {
+  id           String    @id @default(uuid())
+  tipoDente    TipoDente @map("tipo_dente")
+  limiteMinimo Int
+  ativo        Boolean   @default(true)
+  criadoEm     DateTime  @default(now()) @map("criado_em")
+
+  @@map("alertas_estoque")
+}
+
 model ConsultaPublica {
   id                String   @id @default(uuid())
   cpfHash           String   @map("cpf_hash")
