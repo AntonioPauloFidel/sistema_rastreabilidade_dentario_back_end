@@ -12,6 +12,8 @@ const controller = new DenteController();
 const movimentacaoController = new MovimentacaoController();
 const uploadController = new UploadController();
 
+router.get('/exportar', authorize(PerfilUsuario.ADMIN, PerfilUsuario.BIOBANCO_GESTOR), controller.exportar.bind(controller));
+
 router.get('/', controller.listar.bind(controller));
 router.post('/', authorize(PerfilUsuario.ADMIN, PerfilUsuario.BIOBANCO_OPERADOR, PerfilUsuario.BIOBANCO_GESTOR), controller.criar.bind(controller));
 router.get('/:id', controller.buscarPorId.bind(controller));
