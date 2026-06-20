@@ -37,6 +37,12 @@ export class SolicitacaoService {
       data: { status, motivoDecisao: motivo }
     });
   }
+
+  async exportar(filters: { status?: string }) {
+    const where: any = {};
+    if (filters.status) where.status = filters.status;
+    return prisma.solicitacaoDente.findMany({ where, orderBy: { criadoEm: 'desc' }, include: { instituicao: true, itens: true, cessoes: true } });
+  }
 }
 
 export class CessaoService {
@@ -147,5 +153,16 @@ export class CessaoService {
     );
 
     return cessoes;
+  }
+
+  async exportar(filters: { from?: string; to?: string }) {
+    const where: any = {};
+    if (filters.from || filters.to) {
+      where.dataCessao = {};
+      if (filters.from) where.dataCessao.gte = new Date(filters.from);
+      if (filters.to) where.dataCessao.lte = new Date(filters.to);
+    }
+
+    return prisma.cessaoDente.findMany({ where, include: { dente: true, instituicao: true } });
   }
 }

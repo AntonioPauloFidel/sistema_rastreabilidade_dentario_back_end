@@ -1,6 +1,13 @@
 import { NextFunction, Request, Response } from 'express';
 import { cessaoSchema } from '../schemas/sirde.schema';
 import { CessaoService } from '../services/solicitacao.service';
+import { objectsToCsv } from '../utils/csv';
+
+function fmtDate(d?: Date | string | null) {
+  if (!d) return '';
+  const dt = typeof d === 'string' ? new Date(d) : d;
+  return dt.toISOString().slice(0,10);
+}
 
 const cessaoService = new CessaoService();
 
@@ -17,6 +24,29 @@ export class CessaoController {
   async vencidas(req: Request, res: Response, next: NextFunction) {
     try {
       return res.status(200).json({ cessoes: await cessaoService.listarVencidas(req.usuario?.id) });
+    } catch (error) {
+      return next(error);
+    }
+  }
+
+  async exportar(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { from, to } = req.query as any;
+      const cessoes = await cessaoService.exportar({ from, to });
+
+      const csv = objectsToCsv(cessoes, [
+        { label: 'Id', key: 'id' },
+        { label: 'Dente', key: 'dente', transform: (v: any) => v ? v.codigoRastreio : '' },
+        { label: 'Instituicao', key: 'instituicao', transform: (v: any) => v ? v.nome : '' },
+        { label: 'Data Cessao', key: 'dataCessao', transform: (v: any) => fmtDate(v) },
+        { label: 'Data Limite Uso', key: 'dataLimiteUso', transform: (v: any) => fmtDate(v) },
+        { label: 'Observacao', key: 'observacao' }
+      ]);
+
+      const filename = `cessoes-${new Date().toISOString().slice(0,10)}.csv`;
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
+      return res.status(200).send(csv);
     } catch (error) {
       return next(error);
     }
