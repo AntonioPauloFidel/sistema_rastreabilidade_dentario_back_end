@@ -102,6 +102,12 @@ export const movimentacaoSchema = z.object({
   observacao: optionalText
 });
 
+export const descarteDenteSchema = z.object({
+  motivo: z.enum(['CONTAMINADO', 'FRAGMENTADO', 'VENCIDO', 'ERRO_CADASTRO', 'OUTRO']),
+  observacao: z.string().trim().min(1),
+  dataDescarte: z.coerce.date()
+});
+
 export const solicitacaoSchema = z.object({
   instituicaoId: z.string().uuid(),
   finalidade: z.enum(['ENSINO', 'PESQUISA', 'TREINAMENTO', 'OUTRA']),
@@ -173,3 +179,4 @@ export type SolicitacaoInput = z.infer<typeof solicitacaoSchema>;
 export type CessaoInput = z.infer<typeof cessaoSchema>;
 export type CriarUsuarioInput = z.infer<typeof criarUsuarioSchema>;
 export type AlertaEstoqueInput = z.infer<typeof alertaEstoqueSchema>;
+export type DescarteDenteInput = z.infer<typeof descarteDenteSchema>;

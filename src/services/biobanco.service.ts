@@ -171,6 +171,47 @@ export class DenteService {
       return atualizado;
     });
   }
+
+  async descartar(id: string, motivo: 'CONTAMINADO' | 'FRAGMENTADO' | 'VENCIDO' | 'ERRO_CADASTRO' | 'OUTRO', observacao: string, dataDescarte: Date, usuarioId?: string) {
+    const dente = await this.buscarPorId(id);
+
+    const allowed = [StatusDente.ARMAZENADO, StatusDente.HIGIENIZADO, StatusDente.EM_TRIAGEM];
+    if (!allowed.includes(dente.statusAtual as any)) {
+      throw new AppError('Dente nao permitodo para descarte', 400);
+    }
+
+    if (dente.statusAtual === StatusDente.CEDIDO) {
+      throw new AppError('Dente cedido nao pode ser descartado', 400);
+    }
+
+    return prisma.$transaction(async (tx) => {
+      const atualizado = await tx.dente.update({ where: { id }, data: { statusAtual: StatusDente.DESCARTADO } });
+
+      await tx.movimentacaoDente.create({
+        data: {
+          denteId: id,
+          origemLocalId: dente.localAtualId,
+          statusAnterior: dente.statusAtual,
+          statusNovo: StatusDente.DESCARTADO,
+          motivo: motivo,
+          observacao,
+          responsavelId: usuarioId
+        }
+      });
+
+      await tx.auditoriaEvento.create({
+        data: {
+          usuarioId,
+          acao: 'DESCARTAR_DENTE',
+          entidade: 'Dente',
+          entidadeId: id,
+          dados: { motivo, observacao, dataDescarte: dataDescarte.toISOString() }
+        }
+      });
+
+      return atualizado;
+    });
+  }
 }
 
 export class MovimentacaoService {

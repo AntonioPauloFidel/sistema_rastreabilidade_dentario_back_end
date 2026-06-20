@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
-import { denteSchema, alterarStatusDenteSchema, idParamSchema } from '../schemas/sirde.schema';
+import { denteSchema, alterarStatusDenteSchema, idParamSchema, descarteDenteSchema } from '../schemas/sirde.schema';
 import { DenteService } from '../services/biobanco.service';
 import { objectsToCsv } from '../utils/csv';
 
@@ -50,6 +50,17 @@ export class DenteController {
         data.observacao,
         req.usuario?.id
       );
+      return res.status(200).json({ dente });
+    } catch (error) {
+      return next(error);
+    }
+  }
+
+  async descartar(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = idParamSchema.parse(req.params);
+      const data = descarteDenteSchema.parse(req.body);
+      const dente = await denteService.descartar(id, data.motivo, data.observacao, data.dataDescarte, req.usuario?.id);
       return res.status(200).json({ dente });
     } catch (error) {
       return next(error);
