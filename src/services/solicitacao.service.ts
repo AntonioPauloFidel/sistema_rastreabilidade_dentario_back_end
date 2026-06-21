@@ -1,10 +1,7 @@
 import { Prisma, StatusSolicitacao, StatusDente } from '@prisma/client';
 import { AppError } from '../errors/app-error';
 import { prisma } from '../prisma/client';
-import { AuditoriaService } from './auditoria.service';
 import { CessaoInput, SolicitacaoInput } from '../schemas/sirde.schema';
-
-const auditoriaService = new AuditoriaService();
 
 export class SolicitacaoService {
   async listar(filters?: { status?: StatusSolicitacao; instituicaoId?: string; page?: number; limit?: number }) {
@@ -120,51 +117,5 @@ export class CessaoService {
 
       return cessao;
     });
-  }
-
-  async listarVencidas(usuarioId?: string) {
-    const hoje = new Date();
-    const cessoes = await prisma.cessaoDente.findMany({
-      where: {
-        dataLimiteUso: {
-          lt: hoje
-        }
-      } as any,
-      include: {
-        solicitacao: true,
-        instituicao: true,
-        dente: true
-      }
-    });
-
-    await Promise.all(
-      cessoes.map(async (cessao) => {
-        const eventoExistente = await prisma.auditoriaEvento.findFirst({
-          where: {
-            entidade: 'CessaoDente',
-            entidadeId: cessao.id,
-            acao: 'CESSAO_VENCIDA'
-          }
-        });
-
-        if (!eventoExistente) {
-          const dataLimiteUso = (cessao as any).dataLimiteUso as Date | undefined;
-
-          return auditoriaService.registrar({
-            usuarioId,
-            acao: 'CESSAO_VENCIDA',
-            entidade: 'CessaoDente',
-            entidadeId: cessao.id,
-            dados: {
-              dataLimiteUso: dataLimiteUso?.toISOString()
-            }
-          });
-        }
-
-        return null;
-      })
-    );
-
-    return cessoes;
   }
 }
