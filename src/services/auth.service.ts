@@ -4,7 +4,7 @@ import { env } from '../config/env';
 import { AppError } from '../errors/app-error';
 import { prisma } from '../prisma/client';
 import { usuarioPublicSelect } from '../prisma/selects';
-import { LoginInput, RegisterInput } from '../schemas/auth.schema';
+import { AlterarSenhaInput, EditarPerfilInput, LoginInput, RegisterInput } from '../schemas/auth.schema';
 import { gerarRefreshToken, gerarToken, verificarRefreshToken } from './jwt.service';
 
 function isUniqueConstraintError(error: unknown) {
@@ -144,5 +144,43 @@ export class AuthService {
         perfil: pessoa.usuario.perfil
       }
     };
+  }
+
+  async editarPerfil(usuarioId: string, data: EditarPerfilInput) {
+    if (data.email) {
+      const emailEmUso = await prisma.pessoa.findFirst({
+        where: { email: data.email, NOT: { id: usuarioId } },
+        select: { id: true }
+      });
+      if (emailEmUso) throw new AppError('E-mail ja esta em uso', 409);
+    }
+
+    const pessoa = await prisma.pessoa.update({
+      where: { id: usuarioId },
+      data: {
+        ...(data.nome && { nome: data.nome }),
+        ...(data.email && { email: data.email })
+      },
+      select: { id: true, nome: true, email: true, ativo: true, atualizadoEm: true }
+    });
+
+    return { pessoa };
+  }
+
+  async alterarSenha(usuarioId: string, data: AlterarSenhaInput) {
+    const usuario = await prisma.usuario.findUnique({
+      where: { id: usuarioId },
+      select: { senhaHash: true }
+    });
+
+    if (!usuario) throw new AppError('Usuario nao encontrado', 404);
+
+    const senhaValida = await bcrypt.compare(data.senhaAtual, usuario.senhaHash);
+    if (!senhaValida) throw new AppError('Senha atual incorreta', 401);
+
+    const novaSenhaHash = await bcrypt.hash(data.novaSenha, env.BCRYPT_SALT_ROUNDS);
+    await prisma.usuario.update({ where: { id: usuarioId }, data: { senhaHash: novaSenhaHash } });
+
+    return { message: 'Senha alterada com sucesso' };
   }
 }
