@@ -1,7 +1,10 @@
 import { StatusSolicitacao, StatusDente } from '@prisma/client';
 import { AppError } from '../errors/app-error';
 import { prisma } from '../prisma/client';
+import { AuditoriaService } from './auditoria.service';
 import { CessaoInput, SolicitacaoInput } from '../schemas/sirde.schema';
+
+const auditoriaService = new AuditoriaService();
 
 export class SolicitacaoService {
   async listar() {
@@ -69,7 +72,80 @@ export class CessaoService {
         }
       });
 
+      // Verifica alertas de estoque configurados para o tipo do dente
+      const alerta = await (tx as any).alertaEstoque.findFirst({ where: { tipoDente: dente.tipo, ativo: true } });
+      if (alerta) {
+        const estoqueAtual = await tx.dente.count({
+          where: {
+            tipo: dente.tipo,
+            statusAtual: { notIn: [StatusDente.CEDIDO, StatusDente.DESCARTADO, StatusDente.PERDIDO] }
+          }
+        });
+
+        if (estoqueAtual < alerta.limiteMinimo) {
+          await tx.auditoriaEvento.create({
+            data: {
+              acao: 'ALERTA_ESTOQUE',
+              entidade: 'AlertaEstoque',
+              entidadeId: alerta.id,
+              usuarioId: usuarioId,
+              dados: {
+                tipoDente: dente.tipo,
+                limiteMinimo: alerta.limiteMinimo,
+                estoqueAtual
+              }
+            }
+          });
+        }
+      }
+
       return cessao;
     });
+  }
+
+  async listarVencidas(usuarioId?: string) {
+    const hoje = new Date();
+    const cessoes = await prisma.cessaoDente.findMany({
+      where: {
+        dataLimiteUso: {
+          lt: hoje
+        }
+      } as any,
+      include: {
+        solicitacao: true,
+        instituicao: true,
+        dente: true
+      }
+    });
+
+    await Promise.all(
+      cessoes.map(async (cessao) => {
+        const eventoExistente = await prisma.auditoriaEvento.findFirst({
+          where: {
+            entidade: 'CessaoDente',
+            entidadeId: cessao.id,
+            acao: 'CESSAO_VENCIDA'
+          }
+        });
+
+        if (!eventoExistente) {
+          const dataLimiteUso = (cessao as any).dataLimiteUso as Date | undefined;
+
+          return auditoriaService.registrar({
+            usuarioId,
+            acao: 'CESSAO_VENCIDA',
+            entidade: 'CessaoDente',
+            entidadeId: cessao.id,
+            dados: {
+              dataLimiteUso: dataLimiteUso?.toISOString()
+            }
+          });
+        }
+
+        return null;
+      })
+    );
+
+    return cessoes;
   }
 }

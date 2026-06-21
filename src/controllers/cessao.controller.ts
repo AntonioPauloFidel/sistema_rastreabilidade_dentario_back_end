@@ -13,4 +13,12 @@ export class CessaoController {
       return next(error);
     }
   }
+
+  async vencidas(req: Request, res: Response, next: NextFunction) {
+    try {
+      return res.status(200).json({ cessoes: await cessaoService.listarVencidas(req.usuario?.id) });
+    } catch (error) {
+      return next(error);
+    }
+  }
 }
