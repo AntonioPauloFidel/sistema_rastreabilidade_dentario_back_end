@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { AuthService } from '../services/auth.service';
-import { loginSchema, registerSchema } from '../schemas/auth.schema';
+import { alterarSenhaSchema, editarPerfilSchema, loginSchema, registerSchema } from '../schemas/auth.schema';
 import { AppError } from '../errors/app-error';
 import {
   clearAuthCookies,
@@ -64,5 +64,27 @@ export class AuthController {
   async logout(req: Request, res: Response) {
     clearAuthCookies(res);
     return res.status(204).send();
+  }
+
+  async editarPerfil(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.usuario) return next(new AppError('Nao autenticado', 401));
+      const data = editarPerfilSchema.parse(req.body);
+      const result = await authService.editarPerfil(req.usuario.id, data);
+      return res.status(200).json(result);
+    } catch (error) {
+      return next(error);
+    }
+  }
+
+  async alterarSenha(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.usuario) return next(new AppError('Nao autenticado', 401));
+      const data = alterarSenhaSchema.parse(req.body);
+      const result = await authService.alterarSenha(req.usuario.id, data);
+      return res.status(200).json(result);
+    } catch (error) {
+      return next(error);
+    }
   }
 }
