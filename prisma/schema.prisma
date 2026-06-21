@@ -335,6 +335,7 @@ model CessaoDente {
   dente          Dente    @relation(fields: [denteId], references: [id])
   responsavelId  String?  @map("responsavel_id")
   dataCessao     DateTime @default(now()) @map("data_cessao")
+  dataLimiteUso  DateTime? @map("data_limite_uso")
   observacao     String?
 
   @@index([solicitacaoId])
