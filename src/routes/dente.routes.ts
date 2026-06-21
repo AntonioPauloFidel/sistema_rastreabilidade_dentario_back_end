@@ -14,6 +14,7 @@ router.post('/', authorize(PerfilUsuario.ADMIN, PerfilUsuario.BIOBANCO_OPERADOR,
 router.get('/:id', controller.buscarPorId.bind(controller));
 router.get('/:id/qrcode', ensureAuthenticated, controller.gerarQRCode.bind(controller));
 router.patch('/:id/status', authorize(PerfilUsuario.ADMIN, PerfilUsuario.BIOBANCO_OPERADOR, PerfilUsuario.BIOBANCO_GESTOR), controller.alterarStatus.bind(controller));
+router.post('/:id/descartar', authorize(PerfilUsuario.ADMIN, PerfilUsuario.BIOBANCO_GESTOR), controller.descartar.bind(controller));
 router.get('/:id/movimentacoes', movimentacaoController.porDente.bind(movimentacaoController));
 
 export { router as denteRoutes };
