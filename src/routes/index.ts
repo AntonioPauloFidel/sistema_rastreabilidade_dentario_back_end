@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { auditoriaRoutes } from './auditoria.routes';
 import { authRoutes } from './auth.routes';
+import { buscaRoutes } from './busca.routes';
 import { cessaoRoutes } from './cessao.routes';
 import { clinicaRoutes } from './clinica.routes';
 import { dashboardRoutes } from './dashboard.routes';
@@ -38,6 +39,7 @@ router.use('/solicitacoes', ensureAuthenticated, solicitacaoRoutes);
 router.use('/cessoes', ensureAuthenticated, cessaoRoutes);
 router.use('/dashboard', ensureAuthenticated, dashboardRoutes);
 router.use('/auditoria', ensureAuthenticated, auditoriaRoutes);
+router.use('/busca', ensureAuthenticated, buscaRoutes);
 router.use('/configuracoes', ensureAuthenticated, configRoutes);
  
 export { router };
