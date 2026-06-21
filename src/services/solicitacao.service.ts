@@ -92,4 +92,56 @@ export class CessaoService {
       return cessao;
     });
   }
+
+  async listar(filters?: { instituicaoId?: string; page?: number; limit?: number }) {
+    const where: Prisma.CessaoDenteWhereInput = {};
+    if (filters?.instituicaoId) where.instituicaoId = filters.instituicaoId;
+
+    const page = filters?.page ?? 1;
+    const limit = filters?.limit ?? 20;
+    const total = await prisma.cessaoDente.count({ where });
+    const data = await prisma.cessaoDente.findMany({
+      where,
+      orderBy: { dataCessao: 'desc' },
+      select: {
+        id: true,
+        dataCessao: true,
+        prazoUso: true,
+        observacao: true,
+        instituicao: { select: { id: true, nome: true } },
+        dente: { select: { id: true, codigoRastreio: true, tipo: true } }
+      },
+      skip: (page - 1) * limit,
+      take: limit
+    });
+
+    return { data, total };
+  }
+
+  async vencidas(filters?: { page?: number; limit?: number }) {
+    const agora = new Date();
+    const where: Prisma.CessaoDenteWhereInput = {
+      prazoUso: { lt: agora, not: null }
+    };
+
+    const page = filters?.page ?? 1;
+    const limit = filters?.limit ?? 20;
+    const total = await prisma.cessaoDente.count({ where });
+    const data = await prisma.cessaoDente.findMany({
+      where,
+      orderBy: { prazoUso: 'asc' },
+      select: {
+        id: true,
+        dataCessao: true,
+        prazoUso: true,
+        observacao: true,
+        instituicao: { select: { id: true, nome: true } },
+        dente: { select: { id: true, codigoRastreio: true, tipo: true } }
+      },
+      skip: (page - 1) * limit,
+      take: limit
+    });
+
+    return { data, total };
+  }
 }
