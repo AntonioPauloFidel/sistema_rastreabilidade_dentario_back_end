@@ -2,6 +2,7 @@ import { Prisma, StatusSolicitacao, StatusDente } from '@prisma/client';
 import { AppError } from '../errors/app-error';
 import { prisma } from '../prisma/client';
 import { CessaoInput, SolicitacaoInput } from '../schemas/sirde.schema';
+import { solicitacaoListSelect } from '../prisma/selects';
 
 export class SolicitacaoService {
   async listar(filters?: { status?: StatusSolicitacao; instituicaoId?: string; page?: number; limit?: number }) {
@@ -22,7 +23,7 @@ export class SolicitacaoService {
     const data = await prisma.solicitacaoDente.findMany({
       where,
       orderBy: { criadoEm: 'desc' },
-      include: { instituicao: true, itens: true, cessoes: true },
+      select: solicitacaoListSelect,
       skip: (page - 1) * limit,
       take: limit
     });
