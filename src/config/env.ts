@@ -16,7 +16,13 @@ const envSchema = z.object({
     .string()
     .regex(/^\d+[smhd]$/, 'REFRESH_TOKEN_EXPIRES_IN deve usar formatos como 15m, 1h ou 7d')
     .default('7d'),
-  BCRYPT_SALT_ROUNDS: z.coerce.number().int().min(8).max(14).default(10)
+  BCRYPT_SALT_ROUNDS: z.coerce.number().int().min(8).max(14).default(10),
+  SMTP_HOST: z.string().optional(),
+  SMTP_PORT: z.coerce.number().int().positive().default(587),
+  SMTP_USER: z.string().optional(),
+  SMTP_PASS: z.string().optional(),
+  SMTP_FROM: z.string().default('noreply@sirde.com'),
+  APP_URL: z.string().url().default('http://localhost:3000')
 }).superRefine((env, ctx) => {
   if (env.NODE_ENV === 'production' && env.JWT_SECRET.length < 32) {
     ctx.addIssue({

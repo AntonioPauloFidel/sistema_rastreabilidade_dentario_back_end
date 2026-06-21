@@ -3,6 +3,7 @@ import { AppError } from '../errors/app-error';
 import { prisma } from '../prisma/client';
 import { CessaoInput, SolicitacaoInput } from '../schemas/sirde.schema';
 import { solicitacaoListSelect } from '../prisma/selects';
+import { enviarNotificacaoSolicitacao } from './email.service';
 
 export class SolicitacaoService {
   async listar(filters?: { status?: StatusSolicitacao; instituicaoId?: string; page?: number; limit?: number }) {
@@ -46,13 +47,22 @@ export class SolicitacaoService {
   }
 
   async decidir(id: string, status: StatusSolicitacao, motivo?: string) {
-    const solicitacao = await prisma.solicitacaoDente.findUnique({ where: { id } });
+    const solicitacao = await prisma.solicitacaoDente.findUnique({
+      where: { id },
+      include: { instituicao: { select: { email: true } } }
+    });
     if (!solicitacao) throw new AppError('Solicitacao nao encontrada', 404);
 
-    return prisma.solicitacaoDente.update({
+    const atualizada = await prisma.solicitacaoDente.update({
       where: { id },
       data: { status, motivoDecisao: motivo }
     });
+
+    if ((status === 'APROVADA' || status === 'RECUSADA') && solicitacao.instituicao.email) {
+      enviarNotificacaoSolicitacao(solicitacao.instituicao.email, status, motivo).catch(() => {});
+    }
+
+    return atualizada;
   }
 }
 
