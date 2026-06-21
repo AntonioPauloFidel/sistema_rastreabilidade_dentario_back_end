@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import path from 'path';
 import { router } from './routes';
 import { errorHandler, notFound } from './middlewares/error.middleware';
 import { env } from './config/env';
@@ -53,6 +54,7 @@ app.get('/health', async (req, res) => {
   });
 });
  
+app.use('/uploads', express.static(path.resolve(process.cwd(), 'uploads')));
 app.use('/api', router);
  
 app.use(notFound);
