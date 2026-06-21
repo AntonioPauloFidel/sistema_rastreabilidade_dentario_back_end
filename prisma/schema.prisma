@@ -319,15 +319,16 @@ model ItemSolicitacao {
 }
 
 model CessaoDente {
-  id             String   @id @default(uuid())
-  solicitacaoId  String   @map("solicitacao_id")
+  id             String    @id @default(uuid())
+  solicitacaoId  String    @map("solicitacao_id")
   solicitacao    SolicitacaoDente @relation(fields: [solicitacaoId], references: [id])
-  instituicaoId  String   @map("instituicao_id")
+  instituicaoId  String    @map("instituicao_id")
   instituicao    Instituicao @relation(fields: [instituicaoId], references: [id])
-  denteId        String   @map("dente_id")
-  dente          Dente    @relation(fields: [denteId], references: [id])
-  responsavelId  String?  @map("responsavel_id")
-  dataCessao     DateTime @default(now()) @map("data_cessao")
+  denteId        String    @map("dente_id")
+  dente          Dente     @relation(fields: [denteId], references: [id])
+  responsavelId  String?   @map("responsavel_id")
+  dataCessao     DateTime  @default(now()) @map("data_cessao")
+  prazoUso       DateTime? @map("prazo_uso")
   observacao     String?
 
   @@map("cessoes_dente")
