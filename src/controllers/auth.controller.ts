@@ -2,6 +2,13 @@ import { Request, Response, NextFunction } from 'express';
 import { AuthService } from '../services/auth.service';
 import { alterarSenhaSchema, editarPerfilSchema, loginSchema, registerSchema } from '../schemas/auth.schema';
 import { AppError } from '../errors/app-error';
+import { z } from 'zod';
+
+const esqueceuSenhaSchema = z.object({ email: z.string().email() });
+const redefinirSenhaSchema = z.object({
+  token: z.string().min(1),
+  novaSenha: z.string().min(8).max(72)
+});
 import {
   clearAuthCookies,
   getCookie,
@@ -82,6 +89,26 @@ export class AuthController {
       if (!req.usuario) return next(new AppError('Nao autenticado', 401));
       const data = alterarSenhaSchema.parse(req.body);
       const result = await authService.alterarSenha(req.usuario.id, data);
+      return res.status(200).json(result);
+    } catch (error) {
+      return next(error);
+    }
+  }
+
+  async esqueceuSenha(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { email } = esqueceuSenhaSchema.parse(req.body);
+      await authService.esqueceuSenha(email);
+      return res.status(200).json({ message: 'Se o e-mail existir, um link de recuperacao sera enviado.' });
+    } catch (error) {
+      return next(error);
+    }
+  }
+
+  async redefinirSenha(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { token, novaSenha } = redefinirSenhaSchema.parse(req.body);
+      const result = await authService.redefinirSenha(token, novaSenha);
       return res.status(200).json(result);
     } catch (error) {
       return next(error);

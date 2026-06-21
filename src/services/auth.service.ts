@@ -5,7 +5,8 @@ import { AppError } from '../errors/app-error';
 import { prisma } from '../prisma/client';
 import { usuarioPublicSelect } from '../prisma/selects';
 import { AlterarSenhaInput, EditarPerfilInput, LoginInput, RegisterInput } from '../schemas/auth.schema';
-import { gerarRefreshToken, gerarToken, verificarRefreshToken } from './jwt.service';
+import { gerarRefreshToken, gerarToken, gerarTokenRecuperacao, verificarRefreshToken, verificarTokenRecuperacao } from './jwt.service';
+import { enviarRecuperacaoSenha } from './email.service';
 
 function isUniqueConstraintError(error: unknown) {
   return error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002';
@@ -187,5 +188,34 @@ export class AuthService {
     await prisma.usuario.update({ where: { id: usuarioId }, data: { senhaHash: novaSenhaHash } });
 
     return { message: 'Senha alterada com sucesso' };
+  }
+
+  async esqueceuSenha(email: string) {
+    const pessoa = await prisma.pessoa.findUnique({ where: { email }, select: { id: true, ativo: true } });
+    if (!pessoa || !pessoa.ativo) return;
+
+    const token = gerarTokenRecuperacao(email);
+    await enviarRecuperacaoSenha(email, token);
+  }
+
+  async redefinirSenha(token: string, novaSenha: string) {
+    let email: string;
+    try {
+      email = verificarTokenRecuperacao(token);
+    } catch {
+      throw new AppError('Token invalido ou expirado', 400);
+    }
+
+    const pessoa = await prisma.pessoa.findUnique({
+      where: { email },
+      select: { id: true, ativo: true }
+    });
+
+    if (!pessoa || !pessoa.ativo) throw new AppError('Usuario nao encontrado', 404);
+
+    const senhaHash = await bcrypt.hash(novaSenha, env.BCRYPT_SALT_ROUNDS);
+    await prisma.usuario.update({ where: { id: pessoa.id }, data: { senhaHash } });
+
+    return { message: 'Senha redefinida com sucesso' };
   }
 }
