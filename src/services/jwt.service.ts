@@ -55,6 +55,16 @@ export function verificarToken(token: string): JwtPayload {
   };
 }
 
+export function gerarTokenRecuperacao(email: string): string {
+  return jwt.sign({ sub: email, tokenUse: 'reset' }, env.JWT_SECRET, { expiresIn: '15m' });
+}
+
+export function verificarTokenRecuperacao(token: string): string {
+  const decoded = jwt.verify(token, env.JWT_SECRET) as any;
+  if (decoded.tokenUse !== 'reset' || !decoded.sub) throw new Error('Token de recuperacao invalido');
+  return decoded.sub as string;
+}
+
 export function verificarRefreshToken(token: string): RefreshTokenPayload {
   const payload = verificarToken(token);
 
