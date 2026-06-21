@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
-import { denteSchema, alterarStatusDenteSchema, denteListQuerySchema, idParamSchema } from '../schemas/sirde.schema';
+import { denteSchema, alterarStatusDenteSchema, descarteDenteSchema, denteListQuerySchema, idParamSchema } from '../schemas/sirde.schema';
 import { DenteService } from '../services/biobanco.service';
 import { QRCodeService } from '../services/qrcode.service';
 import { paginatedResponse } from '../utils/pagination';
@@ -58,21 +58,27 @@ export class DenteController {
     try {
       const { id } = idParamSchema.parse(req.params);
       const { format } = req.query;
-      
-      // Buscar dente para validar existência
       const dente = await denteService.buscarPorId(id);
-      
       if (format === 'base64') {
         const qrCodeBase64 = await qrCodeService.gerarQRCodeBase64(dente.codigoRastreio);
         return res.status(200).json({ qrcode: qrCodeBase64 });
       }
-      
-      // Retornar como PNG
       const qrCodeBuffer = await qrCodeService.gerarQRCodePNG(dente.codigoRastreio);
       res.setHeader('Content-Type', 'image/png');
       res.setHeader('Content-Length', qrCodeBuffer.length);
       res.setHeader('Cache-Control', 'public, max-age=3600');
       return res.send(qrCodeBuffer);
+    } catch (error) {
+      return next(error);
+    }
+  }
+
+  async descartar(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = idParamSchema.parse(req.params);
+      const { motivo, observacao } = descarteDenteSchema.parse(req.body);
+      const dente = await denteService.descartar(id, motivo, observacao, req.usuario?.id);
+      return res.status(200).json({ dente });
     } catch (error) {
       return next(error);
     }

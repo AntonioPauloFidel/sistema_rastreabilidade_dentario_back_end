@@ -193,6 +193,47 @@ export class DenteService {
       return atualizado;
     });
   }
+
+  async descartar(id: string, motivo: string, observacao?: string, usuarioId?: string) {
+    const dente = await this.buscarPorId(id);
+
+    const statusBloqueados: StatusDente[] = ['DESCARTADO', 'CEDIDO', 'PERDIDO'];
+    if (statusBloqueados.includes(dente.statusAtual)) {
+      throw new AppError(`Dente com status ${dente.statusAtual} nao pode ser descartado`, 422);
+    }
+
+    return prisma.$transaction(async (tx) => {
+      const atualizado = await tx.dente.update({
+        where: { id },
+        data: { statusAtual: 'DESCARTADO', localAtualId: null }
+      });
+
+      await tx.movimentacaoDente.create({
+        data: {
+          denteId: id,
+          origemLocalId: dente.localAtualId,
+          destinoLocalId: null,
+          statusAnterior: dente.statusAtual,
+          statusNovo: 'DESCARTADO',
+          motivo,
+          observacao,
+          responsavelId: usuarioId
+        }
+      });
+
+      await tx.auditoriaEvento.create({
+        data: {
+          usuarioId,
+          acao: 'DESCARTAR_DENTE',
+          entidade: 'Dente',
+          entidadeId: id,
+          dados: { statusAnterior: dente.statusAtual, motivo, observacao }
+        }
+      });
+
+      return atualizado;
+    });
+  }
 }
 
 export class MovimentacaoService {
