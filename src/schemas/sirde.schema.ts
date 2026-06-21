@@ -73,6 +73,11 @@ export const denteSchema = z.object({
   observacao: optionalText
 });
 
+export const descarteDenteSchema = z.object({
+  motivo: z.string().trim().min(10, 'Motivo deve ter pelo menos 10 caracteres'),
+  observacao: optionalText
+});
+
 export const alterarStatusDenteSchema = z.object({
   statusNovo: z.enum([
     'RECEBIDO',
