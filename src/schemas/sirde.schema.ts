@@ -130,6 +130,7 @@ export const cessaoSchema = z.object({
   solicitacaoId: z.string().uuid(),
   instituicaoId: z.string().uuid(),
   denteId: z.string().uuid(),
+  prazoUso: z.coerce.date().optional(),
   observacao: optionalText
 });
 
