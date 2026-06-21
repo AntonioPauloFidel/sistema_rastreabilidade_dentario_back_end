@@ -13,6 +13,12 @@ function isUniqueConstraintError(error: unknown) {
 
 export class AuthService {
   async registrar(data: RegisterInput) {
+    const totalUsuarios = await prisma.usuario.count();
+
+    if (totalUsuarios > 0) {
+      throw new AppError('Registro publico desativado. Solicite acesso a um administrador.', 403);
+    }
+
     const pessoaExistente = await prisma.pessoa.findUnique({
       where: { email: data.email },
       select: { id: true }
@@ -23,13 +29,12 @@ export class AuthService {
     }
 
     const senhaHash = await bcrypt.hash(data.senha, env.BCRYPT_SALT_ROUNDS);
-    const totalUsuarios = await prisma.usuario.count();
 
     try {
       const usuario = await prisma.usuario.create({
         data: {
           senhaHash,
-          perfil: totalUsuarios === 0 ? 'ADMIN' : 'BIOBANCO_OPERADOR',
+          perfil: 'ADMIN',
           pessoa: {
             create: {
               nome: data.nome,
