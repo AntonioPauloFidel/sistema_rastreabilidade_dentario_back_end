@@ -2,6 +2,7 @@ import { Prisma } from '@prisma/client';
 import { AppError } from '../errors/app-error';
 import { prisma } from '../prisma/client';
 import { ClinicaInput, DentistaInput, InstituicaoInput, LocalInput } from '../schemas/sirde.schema';
+import { clinicaListSelect, dentistaListSelect, instituicaoListSelect } from '../prisma/selects';
 
 function isUniqueConstraintError(error: unknown) {
   return error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002';
@@ -21,7 +22,7 @@ export class InstituicaoService {
     const data = await prisma.instituicao.findMany({
       where,
       orderBy: { nome: 'asc' },
-      include: { endereco: true },
+      select: instituicaoListSelect,
       skip: (page - 1) * limit,
       take: limit
     });
@@ -69,7 +70,7 @@ export class ClinicaService {
     const data = await prisma.clinica.findMany({
       where,
       orderBy: { nome: 'asc' },
-      include: { endereco: true },
+      select: clinicaListSelect,
       skip: (page - 1) * limit,
       take: limit
     });
@@ -122,7 +123,7 @@ export class DentistaService {
     const data = await prisma.dentista.findMany({
       where,
       orderBy: { nome: 'asc' },
-      include: { clinica: true },
+      select: dentistaListSelect,
       skip: (page - 1) * limit,
       take: limit
     });

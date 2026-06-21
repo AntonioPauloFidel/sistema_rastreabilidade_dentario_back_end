@@ -8,6 +8,7 @@ import {
   RemessaInput,
   TermoInput
 } from '../schemas/sirde.schema';
+import { denteListSelect } from '../prisma/selects';
 import { hashCpf, onlyDigits } from '../utils/hash';
 import { AuditoriaService } from './auditoria.service';
 
@@ -113,7 +114,7 @@ export class DenteService {
     const data = await prisma.dente.findMany({
       where,
       orderBy: { criadoEm: 'desc' },
-      include: { doador: true, remessa: true, localAtual: true },
+      select: denteListSelect,
       skip: (page - 1) * limit,
       take: limit
     });
