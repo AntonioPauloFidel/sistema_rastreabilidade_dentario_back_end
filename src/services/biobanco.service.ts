@@ -1,4 +1,4 @@
-import { Prisma, StatusDente } from '@prisma/client';
+import { Prisma, StatusDente, TipoDente } from '@prisma/client';
 import { AppError } from '../errors/app-error';
 import { prisma } from '../prisma/client';
 import {
@@ -8,6 +8,7 @@ import {
   RemessaInput,
   TermoInput
 } from '../schemas/sirde.schema';
+import { denteListSelect } from '../prisma/selects';
 import { hashCpf, onlyDigits } from '../utils/hash';
 import { AuditoriaService } from './auditoria.service';
 
@@ -70,8 +71,19 @@ export class TermoConsentimentoService {
 }
 
 export class RemessaEntradaService {
-  async listar() {
-    return prisma.remessaEntrada.findMany({ orderBy: { criadoEm: 'desc' }, include: { clinica: true } });
+  async listar(filters?: { page?: number; limit?: number }) {
+    const page = filters?.page ?? 1;
+    const limit = filters?.limit ?? 20;
+    const total = await prisma.remessaEntrada.count();
+
+    const data = await prisma.remessaEntrada.findMany({
+      orderBy: { criadoEm: 'desc' },
+      include: { clinica: true },
+      skip: (page - 1) * limit,
+      take: limit
+    });
+
+    return { data, total };
   }
 
   async criar(data: RemessaInput) {
@@ -80,11 +92,34 @@ export class RemessaEntradaService {
 }
 
 export class DenteService {
-  async listar() {
-    return prisma.dente.findMany({
+  async listar(filters?: { status?: StatusDente; tipo?: TipoDente; remessaId?: string; page?: number; limit?: number }) {
+    const where: Prisma.DenteWhereInput = {};
+
+    if (filters?.status) {
+      where.statusAtual = filters.status;
+    }
+
+    if (filters?.tipo) {
+      where.tipo = filters.tipo;
+    }
+
+    if (filters?.remessaId) {
+      where.remessaId = filters.remessaId;
+    }
+
+    const page = filters?.page ?? 1;
+    const limit = filters?.limit ?? 20;
+    const total = await prisma.dente.count({ where });
+
+    const data = await prisma.dente.findMany({
+      where,
       orderBy: { criadoEm: 'desc' },
-      include: { doador: true, remessa: true, localAtual: true }
+      select: denteListSelect,
+      skip: (page - 1) * limit,
+      take: limit
     });
+
+    return { data, total };
   }
 
   async buscarPorId(id: string) {
@@ -158,14 +193,77 @@ export class DenteService {
       return atualizado;
     });
   }
+
+  async descartar(id: string, motivo: string, observacao?: string, usuarioId?: string) {
+    const dente = await this.buscarPorId(id);
+
+    const statusBloqueados: StatusDente[] = ['DESCARTADO', 'CEDIDO', 'PERDIDO'];
+    if (statusBloqueados.includes(dente.statusAtual)) {
+      throw new AppError(`Dente com status ${dente.statusAtual} nao pode ser descartado`, 422);
+    }
+
+    return prisma.$transaction(async (tx) => {
+      const atualizado = await tx.dente.update({
+        where: { id },
+        data: { statusAtual: 'DESCARTADO', localAtualId: null }
+      });
+
+      await tx.movimentacaoDente.create({
+        data: {
+          denteId: id,
+          origemLocalId: dente.localAtualId,
+          destinoLocalId: null,
+          statusAnterior: dente.statusAtual,
+          statusNovo: 'DESCARTADO',
+          motivo,
+          observacao,
+          responsavelId: usuarioId
+        }
+      });
+
+      await tx.auditoriaEvento.create({
+        data: {
+          usuarioId,
+          acao: 'DESCARTAR_DENTE',
+          entidade: 'Dente',
+          entidadeId: id,
+          dados: { statusAnterior: dente.statusAtual, motivo, observacao }
+        }
+      });
+
+      return atualizado;
+    });
+  }
 }
 
 export class MovimentacaoService {
-  async listar() {
-    return prisma.movimentacaoDente.findMany({
+  async listar(filters?: { denteId?: string; localId?: string; page?: number; limit?: number }) {
+    const where: Prisma.MovimentacaoDenteWhereInput = {};
+
+    if (filters?.denteId) {
+      where.denteId = filters.denteId;
+    }
+
+    if (filters?.localId) {
+      where.OR = [
+        { origemLocalId: filters.localId },
+        { destinoLocalId: filters.localId }
+      ];
+    }
+
+    const page = filters?.page ?? 1;
+    const limit = filters?.limit ?? 20;
+    const total = await prisma.movimentacaoDente.count({ where });
+
+    const data = await prisma.movimentacaoDente.findMany({
+      where,
       orderBy: { criadoEm: 'desc' },
-      include: { dente: true, origemLocal: true, destinoLocal: true }
+      include: { dente: true, origemLocal: true, destinoLocal: true },
+      skip: (page - 1) * limit,
+      take: limit
     });
+
+    return { data, total };
   }
 
   async porDente(denteId: string) {

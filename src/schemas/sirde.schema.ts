@@ -31,6 +31,13 @@ export const dentistaSchema = z.object({
   clinicaId: z.string().uuid().optional()
 });
 
+export const alterarStatusCadastroSchema = z.object({
+  ativo: z.boolean().refine((value) => value === false, {
+    message: 'Apenas a desativacao eh suportada',
+    path: ['ativo']
+  })
+});
+
 export const doadorSchema = z.object({
   cpf: z.string().trim().min(11),
   nome: optionalText,
@@ -63,6 +70,11 @@ export const denteSchema = z.object({
   doadorId: z.string().uuid().optional(),
   remessaId: z.string().uuid().optional(),
   localAtualId: z.string().uuid().optional(),
+  observacao: optionalText
+});
+
+export const descarteDenteSchema = z.object({
+  motivo: z.string().trim().min(10, 'Motivo deve ter pelo menos 10 caracteres'),
   observacao: optionalText
 });
 
@@ -123,7 +135,7 @@ export const cessaoSchema = z.object({
   solicitacaoId: z.string().uuid(),
   instituicaoId: z.string().uuid(),
   denteId: z.string().uuid(),
-  dataLimiteUso: z.coerce.date().optional(),
+  prazoUso: z.coerce.date().optional(),
   observacao: optionalText
 });
 
@@ -136,6 +148,34 @@ export const alertaEstoqueSchema = z.object({
 export const consultaPublicaSchema = z.object({
   cpf: z.string().trim().min(11)
 });
+
+export const paginationQuerySchema = z.object({
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().default(20)
+});
+
+export const denteListQuerySchema = z.object({
+  status: alterarStatusDenteSchema.shape.statusNovo.optional(),
+  tipo: denteSchema.shape.tipo.optional(),
+  remessaId: z.string().uuid().optional()
+}).merge(paginationQuerySchema);
+
+export const solicitacaoListQuerySchema = z.object({
+  status: z.enum([
+    'PENDENTE_ANALISE',
+    'APROVADA',
+    'RECUSADA',
+    'PARCIALMENTE_ATENDIDA',
+    'ATENDIDA',
+    'CANCELADA'
+  ]).optional(),
+  instituicaoId: z.string().uuid().optional()
+}).merge(paginationQuerySchema);
+
+export const movimentacaoListQuerySchema = z.object({
+  denteId: z.string().uuid().optional(),
+  localId: z.string().uuid().optional()
+}).merge(paginationQuerySchema);
 
 export const criarUsuarioSchema = z.object({
   nome: z.string().trim().min(3),
@@ -151,6 +191,29 @@ export const criarUsuarioSchema = z.object({
     'AUDITOR'
   ]).default('BIOBANCO_OPERADOR')
 });
+
+export const usuarioListQuerySchema = z.object({
+  ativo: z.coerce.boolean().optional(),
+  perfil: criarUsuarioSchema.shape.perfil.optional()
+}).merge(paginationQuerySchema);
+
+export const instituicaoListQuerySchema = z.object({
+  tipo: instituicaoSchema.shape.tipo.optional()
+}).merge(paginationQuerySchema);
+
+export const clinicaListQuerySchema = z.object({
+  nome: z.string().trim().min(1).optional()
+}).merge(paginationQuerySchema);
+
+export const dentistaListQuerySchema = z.object({
+  clinicaId: z.string().uuid().optional()
+}).merge(paginationQuerySchema);
+
+export const localListQuerySchema = z.object({}).merge(paginationQuerySchema);
+
+export const remessaListQuerySchema = z.object({}).merge(paginationQuerySchema);
+
+export const auditoriaListQuerySchema = z.object({}).merge(paginationQuerySchema);
 
 export const alterarStatusUsuarioSchema = z.object({
   ativo: z.boolean()

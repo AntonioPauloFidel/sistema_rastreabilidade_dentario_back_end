@@ -1,13 +1,16 @@
 import { NextFunction, Request, Response } from 'express';
-import { localSchema } from '../schemas/sirde.schema';
+import { localListQuerySchema, localSchema } from '../schemas/sirde.schema';
 import { LocalArmazenamentoService } from '../services/cadastros.service';
+import { paginatedResponse } from '../utils/pagination';
 
 const localService = new LocalArmazenamentoService();
 
 export class LocalController {
   async listar(req: Request, res: Response, next: NextFunction) {
     try {
-      return res.status(200).json({ locais: await localService.listar() });
+      const filtros = localListQuerySchema.parse(req.query);
+      const result = await localService.listar(filtros);
+      return res.status(200).json(paginatedResponse(result, { page: filtros.page, limit: filtros.limit }));
     } catch (error) {
       return next(error);
     }

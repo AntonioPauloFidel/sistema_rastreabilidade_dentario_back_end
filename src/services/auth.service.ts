@@ -4,8 +4,9 @@ import { env } from '../config/env';
 import { AppError } from '../errors/app-error';
 import { prisma } from '../prisma/client';
 import { usuarioPublicSelect } from '../prisma/selects';
-import { LoginInput, RegisterInput } from '../schemas/auth.schema';
-import { gerarRefreshToken, gerarToken, verificarRefreshToken } from './jwt.service';
+import { AlterarSenhaInput, EditarPerfilInput, LoginInput, RegisterInput } from '../schemas/auth.schema';
+import { gerarRefreshToken, gerarToken, gerarTokenRecuperacao, verificarRefreshToken, verificarTokenRecuperacao } from './jwt.service';
+import { enviarRecuperacaoSenha } from './email.service';
 
 function isUniqueConstraintError(error: unknown) {
   return error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002';
@@ -13,6 +14,12 @@ function isUniqueConstraintError(error: unknown) {
 
 export class AuthService {
   async registrar(data: RegisterInput) {
+    const totalUsuarios = await prisma.usuario.count();
+
+    if (totalUsuarios > 0) {
+      throw new AppError('Registro publico desativado. Solicite acesso a um administrador.', 403);
+    }
+
     const pessoaExistente = await prisma.pessoa.findUnique({
       where: { email: data.email },
       select: { id: true }
@@ -23,13 +30,12 @@ export class AuthService {
     }
 
     const senhaHash = await bcrypt.hash(data.senha, env.BCRYPT_SALT_ROUNDS);
-    const totalUsuarios = await prisma.usuario.count();
 
     try {
       const usuario = await prisma.usuario.create({
         data: {
           senhaHash,
-          perfil: totalUsuarios === 0 ? 'ADMIN' : 'BIOBANCO_OPERADOR',
+          perfil: 'ADMIN',
           pessoa: {
             create: {
               nome: data.nome,
@@ -144,5 +150,72 @@ export class AuthService {
         perfil: pessoa.usuario.perfil
       }
     };
+  }
+
+  async editarPerfil(usuarioId: string, data: EditarPerfilInput) {
+    if (data.email) {
+      const emailEmUso = await prisma.pessoa.findFirst({
+        where: { email: data.email, NOT: { id: usuarioId } },
+        select: { id: true }
+      });
+      if (emailEmUso) throw new AppError('E-mail ja esta em uso', 409);
+    }
+
+    const pessoa = await prisma.pessoa.update({
+      where: { id: usuarioId },
+      data: {
+        ...(data.nome && { nome: data.nome }),
+        ...(data.email && { email: data.email })
+      },
+      select: { id: true, nome: true, email: true, ativo: true, atualizadoEm: true }
+    });
+
+    return { pessoa };
+  }
+
+  async alterarSenha(usuarioId: string, data: AlterarSenhaInput) {
+    const usuario = await prisma.usuario.findUnique({
+      where: { id: usuarioId },
+      select: { senhaHash: true }
+    });
+
+    if (!usuario) throw new AppError('Usuario nao encontrado', 404);
+
+    const senhaValida = await bcrypt.compare(data.senhaAtual, usuario.senhaHash);
+    if (!senhaValida) throw new AppError('Senha atual incorreta', 401);
+
+    const novaSenhaHash = await bcrypt.hash(data.novaSenha, env.BCRYPT_SALT_ROUNDS);
+    await prisma.usuario.update({ where: { id: usuarioId }, data: { senhaHash: novaSenhaHash } });
+
+    return { message: 'Senha alterada com sucesso' };
+  }
+
+  async esqueceuSenha(email: string) {
+    const pessoa = await prisma.pessoa.findUnique({ where: { email }, select: { id: true, ativo: true } });
+    if (!pessoa || !pessoa.ativo) return;
+
+    const token = gerarTokenRecuperacao(email);
+    await enviarRecuperacaoSenha(email, token);
+  }
+
+  async redefinirSenha(token: string, novaSenha: string) {
+    let email: string;
+    try {
+      email = verificarTokenRecuperacao(token);
+    } catch {
+      throw new AppError('Token invalido ou expirado', 400);
+    }
+
+    const pessoa = await prisma.pessoa.findUnique({
+      where: { email },
+      select: { id: true, ativo: true }
+    });
+
+    if (!pessoa || !pessoa.ativo) throw new AppError('Usuario nao encontrado', 404);
+
+    const senhaHash = await bcrypt.hash(novaSenha, env.BCRYPT_SALT_ROUNDS);
+    await prisma.usuario.update({ where: { id: pessoa.id }, data: { senhaHash } });
+
+    return { message: 'Senha redefinida com sucesso' };
   }
 }

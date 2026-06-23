@@ -10,5 +10,9 @@ router.post('/login', authController.login.bind(authController));
 router.post('/refresh', authController.refresh.bind(authController));
 router.post('/logout', authController.logout.bind(authController));
 router.get('/me', ensureAuthenticated, authController.me.bind(authController));
+router.patch('/me', ensureAuthenticated, authController.editarPerfil.bind(authController));
+router.patch('/senha', ensureAuthenticated, authController.alterarSenha.bind(authController));
+router.post('/esqueceu-senha', authController.esqueceuSenha.bind(authController));
+router.post('/redefinir-senha', authController.redefinirSenha.bind(authController));
  
 export { router as authRoutes };

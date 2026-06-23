@@ -1,17 +1,35 @@
-import { StatusSolicitacao, StatusDente } from '@prisma/client';
+import { Prisma, StatusSolicitacao, StatusDente } from '@prisma/client';
 import { AppError } from '../errors/app-error';
 import { prisma } from '../prisma/client';
-import { AuditoriaService } from './auditoria.service';
 import { CessaoInput, SolicitacaoInput } from '../schemas/sirde.schema';
-
-const auditoriaService = new AuditoriaService();
+import { solicitacaoListSelect } from '../prisma/selects';
+import { enviarNotificacaoSolicitacao } from './email.service';
 
 export class SolicitacaoService {
-  async listar() {
-    return prisma.solicitacaoDente.findMany({
+  async listar(filters?: { status?: StatusSolicitacao; instituicaoId?: string; page?: number; limit?: number }) {
+    const where: Prisma.SolicitacaoDenteWhereInput = {};
+
+    if (filters?.status) {
+      where.status = filters.status;
+    }
+
+    if (filters?.instituicaoId) {
+      where.instituicaoId = filters.instituicaoId;
+    }
+
+    const page = filters?.page ?? 1;
+    const limit = filters?.limit ?? 20;
+    const total = await prisma.solicitacaoDente.count({ where });
+
+    const data = await prisma.solicitacaoDente.findMany({
+      where,
       orderBy: { criadoEm: 'desc' },
-      include: { instituicao: true, itens: true, cessoes: true }
+      select: solicitacaoListSelect,
+      skip: (page - 1) * limit,
+      take: limit
     });
+
+    return { data, total };
   }
 
   async criar(data: SolicitacaoInput) {
@@ -29,13 +47,22 @@ export class SolicitacaoService {
   }
 
   async decidir(id: string, status: StatusSolicitacao, motivo?: string) {
-    const solicitacao = await prisma.solicitacaoDente.findUnique({ where: { id } });
+    const solicitacao = await prisma.solicitacaoDente.findUnique({
+      where: { id },
+      include: { instituicao: { select: { email: true } } }
+    });
     if (!solicitacao) throw new AppError('Solicitacao nao encontrada', 404);
 
-    return prisma.solicitacaoDente.update({
+    const atualizada = await prisma.solicitacaoDente.update({
       where: { id },
       data: { status, motivoDecisao: motivo }
     });
+
+    if ((status === 'APROVADA' || status === 'RECUSADA') && solicitacao.instituicao.email) {
+      enviarNotificacaoSolicitacao(solicitacao.instituicao.email, status, motivo).catch(() => {});
+    }
+
+    return atualizada;
   }
 }
 
@@ -103,49 +130,55 @@ export class CessaoService {
     });
   }
 
-  async listarVencidas(usuarioId?: string) {
-    const hoje = new Date();
-    const cessoes = await prisma.cessaoDente.findMany({
-      where: {
-        dataLimiteUso: {
-          lt: hoje
-        }
-      } as any,
-      include: {
-        solicitacao: true,
-        instituicao: true,
-        dente: true
-      }
+  async listar(filters?: { instituicaoId?: string; page?: number; limit?: number }) {
+    const where: Prisma.CessaoDenteWhereInput = {};
+    if (filters?.instituicaoId) where.instituicaoId = filters.instituicaoId;
+
+    const page = filters?.page ?? 1;
+    const limit = filters?.limit ?? 20;
+    const total = await prisma.cessaoDente.count({ where });
+    const data = await prisma.cessaoDente.findMany({
+      where,
+      orderBy: { dataCessao: 'desc' },
+      select: {
+        id: true,
+        dataCessao: true,
+        prazoUso: true,
+        observacao: true,
+        instituicao: { select: { id: true, nome: true } },
+        dente: { select: { id: true, codigoRastreio: true, tipo: true } }
+      },
+      skip: (page - 1) * limit,
+      take: limit
     });
 
-    await Promise.all(
-      cessoes.map(async (cessao) => {
-        const eventoExistente = await prisma.auditoriaEvento.findFirst({
-          where: {
-            entidade: 'CessaoDente',
-            entidadeId: cessao.id,
-            acao: 'CESSAO_VENCIDA'
-          }
-        });
+    return { data, total };
+  }
 
-        if (!eventoExistente) {
-          const dataLimiteUso = (cessao as any).dataLimiteUso as Date | undefined;
+  async vencidas(filters?: { page?: number; limit?: number }) {
+    const agora = new Date();
+    const where: Prisma.CessaoDenteWhereInput = {
+      prazoUso: { lt: agora, not: null }
+    };
 
-          return auditoriaService.registrar({
-            usuarioId,
-            acao: 'CESSAO_VENCIDA',
-            entidade: 'CessaoDente',
-            entidadeId: cessao.id,
-            dados: {
-              dataLimiteUso: dataLimiteUso?.toISOString()
-            }
-          });
-        }
+    const page = filters?.page ?? 1;
+    const limit = filters?.limit ?? 20;
+    const total = await prisma.cessaoDente.count({ where });
+    const data = await prisma.cessaoDente.findMany({
+      where,
+      orderBy: { prazoUso: 'asc' },
+      select: {
+        id: true,
+        dataCessao: true,
+        prazoUso: true,
+        observacao: true,
+        instituicao: { select: { id: true, nome: true } },
+        dente: { select: { id: true, codigoRastreio: true, tipo: true } }
+      },
+      skip: (page - 1) * limit,
+      take: limit
+    });
 
-        return null;
-      })
-    );
-
-    return cessoes;
+    return { data, total };
   }
 }
