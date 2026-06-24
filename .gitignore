@@ -1,7 +1,17 @@
+# Ambiente
 .env
 *.local
-node_modules/
-dist/
-.prisma
 
+# Dependências
+node_modules/
+
+# Build
+dist/
+
+# Prisma gerado
+.prisma
 /src/generated/prisma
+
+# Uploads de usuários (arquivos reais não devem ir para o repositório)
+uploads/*
+!uploads/.gitkeep

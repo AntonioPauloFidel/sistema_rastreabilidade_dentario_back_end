@@ -30,7 +30,7 @@
     "typescript": "^6.0.3",
     "vitest": "^4.1.5"
   },
-  "name": "sirdeprisma",
+  "name": "sistema_rastreabilidade_dentario_back_end",
   "version": "1.0.0",
   "description": "API SIRDE com Express, TypeScript, Prisma e PostgreSQL",
   "main": "dist/server.js",
@@ -49,8 +49,8 @@
   "prisma": {
     "seed": "tsx prisma/seed.ts"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": ["biobanco", "dentes", "saude", "express", "prisma", "typescript"],
+  "author": "Antonio Paulo Fidel <antoniopfdl.fidel@gmail.com>",
+  "license": "MIT",
   "type": "commonjs"
 }
