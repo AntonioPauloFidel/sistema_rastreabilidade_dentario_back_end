@@ -50,8 +50,8 @@
     "seed": "tsx prisma/seed.ts"
   },
   "keywords": ["biobanco", "dentes", "saude", "express", "prisma", "typescript"],
-  "author": "Antonio Paulo Fidel <antoniopfdl.fidel@gmail.com>",
-  "contributors": [
+  "authors": [
+    "Antonio Paulo Fidel <antoniopfdl.fidel@gmail.com>",
     "Savio <saviotrapz@gmail.com>",
     "Leydson Luis <leydson.rodrigued@gmail.com>"
   ],
