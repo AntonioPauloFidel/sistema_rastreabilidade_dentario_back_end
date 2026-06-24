@@ -51,6 +51,10 @@
   },
   "keywords": ["biobanco", "dentes", "saude", "express", "prisma", "typescript"],
   "author": "Antonio Paulo Fidel <antoniopfdl.fidel@gmail.com>",
+  "contributors": [
+    "Savio <saviotrapz@gmail.com>",
+    "Leydson Luis <leydson.rodrigued@gmail.com>"
+  ],
   "license": "MIT",
   "type": "commonjs"
 }
