@@ -28,7 +28,8 @@ export async function ensureAuthenticated(
         ativo: true,
         usuario: {
           select: {
-            perfil: true
+            perfil: true,
+            instituicaoId: true
           }
         }
       }
@@ -41,7 +42,8 @@ export async function ensureAuthenticated(
     req.usuario = {
       id: pessoa.id,
       email: pessoa.email,
-      perfil: pessoa.usuario.perfil
+      perfil: pessoa.usuario.perfil,
+      instituicaoId: pessoa.usuario.instituicaoId ?? undefined
     };
 
     return next();

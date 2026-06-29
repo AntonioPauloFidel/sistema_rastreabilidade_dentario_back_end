@@ -26,7 +26,7 @@ export class CessaoController {
     try {
       const { page, limit } = paginationQuerySchema.parse(req.query);
       const instituicaoId = req.query.instituicaoId as string | undefined;
-      const result = await cessaoService.listar({ instituicaoId, page, limit });
+      const result = await cessaoService.listar({ instituicaoId, page, limit }, req.usuario?.instituicaoId);
       return res.status(200).json(paginatedResponse(result, { page, limit }));
     } catch (error) {
       return next(error);

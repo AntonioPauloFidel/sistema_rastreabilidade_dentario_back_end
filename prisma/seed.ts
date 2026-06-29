@@ -20,6 +20,7 @@ const ID = {
   gestor:   'a0000000-0000-4000-8000-000000000002',
   operador: 'a0000000-0000-4000-8000-000000000003',
   auditor:  'a0000000-0000-4000-8000-000000000004',
+  instUser: 'a0000000-0000-4000-8000-000000000005',
   // Configuração
   config:   'b0000000-0000-4000-8000-000000000001',
   // Clínicas
@@ -124,7 +125,8 @@ async function main() {
     },
   });
 
-  console.log('✓ Usuários criados');
+  // usuário de instituição — criado após as instituições serem inseridas
+  console.log('✓ Usuários criados (parcial — instUser criado após instituições)');
 
   // ── Configuração do biobanco ─────────────────────────────────────────────────
   await prisma.configuracaoBiobanco.upsert({
@@ -179,7 +181,19 @@ async function main() {
     },
   });
 
-  console.log('✓ Instituições criadas');
+  await prisma.usuario.upsert({
+    where: { id: ID.instUser },
+    update: {},
+    create: {
+      id: ID.instUser,
+      senhaHash,
+      perfil: PerfilUsuario.INSTITUICAO_SOLICITANTE,
+      instituicaoId: inst1.id,
+      pessoa: { create: { nome: 'Representante FOB', email: 'representante@fob.edu.br' } },
+    },
+  });
+
+  console.log('✓ Instituições e usuário institucional criados');
 
   // ── Clínicas ─────────────────────────────────────────────────────────────────
   const clinica1 = await prisma.clinica.upsert({
@@ -560,10 +574,11 @@ async function main() {
 
   console.log('\n✅ Seed concluído com sucesso!\n');
   console.log('Usuários disponíveis (senha: Senha@123):');
-  console.log('  admin@sirde.com       → ADMIN');
-  console.log('  gestora@sirde.com     → BIOBANCO_GESTOR');
-  console.log('  operador@sirde.com    → BIOBANCO_OPERADOR');
-  console.log('  auditor@sirde.com     → AUDITOR');
+  console.log('  admin@sirde.com             → ADMIN');
+  console.log('  gestora@sirde.com           → BIOBANCO_GESTOR');
+  console.log('  operador@sirde.com          → BIOBANCO_OPERADOR');
+  console.log('  auditor@sirde.com           → AUDITOR');
+  console.log('  representante@fob.edu.br    → INSTITUICAO_SOLICITANTE (Faculdade de Odontologia de Brasília)');
 }
 
 main()

@@ -77,7 +77,8 @@ export class AuthService {
         usuario: {
           select: {
             senhaHash: true,
-            perfil: true
+            perfil: true,
+            instituicaoId: true
           }
         }
       }
@@ -122,7 +123,8 @@ export class AuthService {
         ativo: true,
         usuario: {
           select: {
-            perfil: true
+            perfil: true,
+            instituicaoId: true
           }
         }
       }
@@ -147,7 +149,8 @@ export class AuthService {
       usuario: {
         id: pessoa.id,
         email: pessoa.email,
-        perfil: pessoa.usuario.perfil
+        perfil: pessoa.usuario.perfil,
+        instituicaoId: pessoa.usuario.instituicaoId ?? undefined
       }
     };
   }
