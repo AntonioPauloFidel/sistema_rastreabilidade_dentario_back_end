@@ -28,7 +28,8 @@ export class MovimentacaoController {
   async porDente(req: Request, res: Response, next: NextFunction) {
     try {
       const { id } = idParamSchema.parse(req.params);
-      return res.status(200).json({ movimentacoes: await movimentacaoService.porDente(id) });
+      const movimentacoes = await movimentacaoService.porDente(id);
+      return res.status(200).json({ movimentacoes, data: movimentacoes });
     } catch (error) {
       return next(error);
     }

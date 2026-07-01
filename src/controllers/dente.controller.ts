@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
-import { denteSchema, alterarStatusDenteSchema, descarteDenteSchema, denteListQuerySchema, idParamSchema } from '../schemas/sirde.schema';
+import { denteSchema, alterarStatusDenteSchema, descarteDenteSchema, denteListQuerySchema, denteIdParamSchema } from '../schemas/sirde.schema';
 import { DenteService } from '../services/biobanco.service';
 import { QRCodeService } from '../services/qrcode.service';
 import { paginatedResponse } from '../utils/pagination';
@@ -36,8 +36,9 @@ export class DenteController {
 
   async buscarPorId(req: Request, res: Response, next: NextFunction) {
     try {
-      const { id } = idParamSchema.parse(req.params);
-      return res.status(200).json({ dente: await denteService.buscarPorId(id) });
+      const { id } = denteIdParamSchema.parse(req.params);
+      const dente = await denteService.buscarPorId(id);
+      return res.status(200).json({ dente, data: dente });
     } catch (error) {
       return next(error);
     }
@@ -45,7 +46,7 @@ export class DenteController {
 
   async alterarStatus(req: Request, res: Response, next: NextFunction) {
     try {
-      const { id } = idParamSchema.parse(req.params);
+      const { id } = denteIdParamSchema.parse(req.params);
       const data = alterarStatusDenteSchema.parse(req.body);
       const dente = await denteService.alterarStatus(
         id,
@@ -63,7 +64,7 @@ export class DenteController {
 
   async gerarQRCode(req: Request, res: Response, next: NextFunction) {
     try {
-      const { id } = idParamSchema.parse(req.params);
+      const { id } = denteIdParamSchema.parse(req.params);
       const { format } = req.query;
       const dente = await denteService.buscarPorId(id);
       if (format === 'base64') {
@@ -82,7 +83,7 @@ export class DenteController {
 
   async descartar(req: Request, res: Response, next: NextFunction) {
     try {
-      const { id } = idParamSchema.parse(req.params);
+      const { id } = denteIdParamSchema.parse(req.params);
       const { motivo, observacao } = descarteDenteSchema.parse(req.body);
       const dente = await denteService.descartar(id, motivo, observacao, req.usuario?.id);
       return res.status(200).json({ dente });

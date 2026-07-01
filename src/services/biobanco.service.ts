@@ -136,8 +136,10 @@ export class DenteService {
   }
 
   async buscarPorId(id: string) {
-    const dente = await prisma.dente.findUnique({
-      where: { id },
+    const dente = await prisma.dente.findFirst({
+      where: {
+        OR: [{ id }, { codigoRastreio: id }]
+      },
       include: {
         doador: true,
         remessa: true,
