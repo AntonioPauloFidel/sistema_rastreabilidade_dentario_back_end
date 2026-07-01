@@ -6,6 +6,10 @@ export const idParamSchema = z.object({
   id: z.string().uuid('ID invalido')
 });
 
+export const denteIdParamSchema = z.object({
+  id: z.string().min(1, 'ID invalido')
+});
+
 export const instituicaoSchema = z.object({
   nome: z.string().trim().min(2),
   tipo: z.enum(['ESCOLA', 'FACULDADE', 'UNIVERSIDADE', 'LABORATORIO', 'EMPRESA', 'SUS', 'OUTRA']),
