@@ -149,6 +149,15 @@ export const consultaPublicaSchema = z.object({
   cpf: z.string().trim().min(11)
 });
 
+export const solicitarCodigoSchema = z.object({
+  cpf: z.string().trim().min(11)
+});
+
+export const confirmarCodigoSchema = z.object({
+  cpf: z.string().trim().min(11),
+  codigo: z.string().trim().min(4)
+});
+
 export const paginationQuerySchema = z.object({
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().default(20)
