@@ -14,5 +14,7 @@ const consultaLimiter = rateLimit({
 });
 
 router.post('/consulta-dentes', consultaLimiter, controller.consultar.bind(controller));
+router.post('/solicitar-codigo', consultaLimiter, controller.solicitarCodigo.bind(controller));
+router.post('/confirmar-codigo', consultaLimiter, controller.confirmarCodigo.bind(controller));
 
 export { router as publicRoutes };

@@ -6,15 +6,17 @@ import { solicitacaoListSelect } from '../prisma/selects';
 import { enviarNotificacaoSolicitacao } from './email.service';
 
 export class SolicitacaoService {
-  async listar(filters?: { status?: StatusSolicitacao; instituicaoId?: string; page?: number; limit?: number }) {
+  async listar(filters?: { status?: StatusSolicitacao; instituicaoId?: string; page?: number; limit?: number }, usuarioInstituicaoId?: string) {
     const where: Prisma.SolicitacaoDenteWhereInput = {};
+
+    // usuário vinculado a instituição: filtro forçado e não sobreposto pelo query param
+    const instId = usuarioInstituicaoId ?? filters?.instituicaoId;
+    if (instId) {
+      where.instituicaoId = instId;
+    }
 
     if (filters?.status) {
       where.status = filters.status;
-    }
-
-    if (filters?.instituicaoId) {
-      where.instituicaoId = filters.instituicaoId;
     }
 
     const page = filters?.page ?? 1;
@@ -136,9 +138,10 @@ export class CessaoService {
     });
   }
 
-  async listar(filters?: { instituicaoId?: string; page?: number; limit?: number }) {
+  async listar(filters?: { instituicaoId?: string; page?: number; limit?: number }, usuarioInstituicaoId?: string) {
     const where: Prisma.CessaoDenteWhereInput = {};
-    if (filters?.instituicaoId) where.instituicaoId = filters.instituicaoId;
+    const instId = usuarioInstituicaoId ?? filters?.instituicaoId;
+    if (instId) where.instituicaoId = instId;
 
     const page = filters?.page ?? 1;
     const limit = filters?.limit ?? 20;

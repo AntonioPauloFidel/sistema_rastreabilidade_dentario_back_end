@@ -18,7 +18,7 @@ export class DenteController {
   async listar(req: Request, res: Response, next: NextFunction) {
     try {
       const filtros = denteListQuerySchema.parse(req.query);
-      const result = await denteService.listar(filtros);
+      const result = await denteService.listar({ ...filtros, instituicaoId: req.usuario?.instituicaoId });
       return res.status(200).json(paginatedResponse(result, { page: filtros.page, limit: filtros.limit }));
     } catch (error) {
       return next(error);

@@ -92,8 +92,12 @@ export class RemessaEntradaService {
 }
 
 export class DenteService {
-  async listar(filters?: { status?: StatusDente; tipo?: TipoDente; remessaId?: string; page?: number; limit?: number }) {
+  async listar(filters?: { status?: StatusDente; tipo?: TipoDente; remessaId?: string; page?: number; limit?: number; instituicaoId?: string }) {
     const where: Prisma.DenteWhereInput = {};
+
+    if (filters?.instituicaoId) {
+      where.cessoes = { some: { instituicaoId: filters.instituicaoId } };
+    }
 
     if (filters?.status) {
       where.statusAtual = filters.status;
