@@ -8,5 +8,6 @@ const controller = new RemessaController();
 
 router.get('/', controller.listar.bind(controller));
 router.post('/', authorize(PerfilUsuario.ADMIN, PerfilUsuario.BIOBANCO_OPERADOR, PerfilUsuario.BIOBANCO_GESTOR), controller.criar.bind(controller));
+router.put('/:id', authorize(PerfilUsuario.ADMIN, PerfilUsuario.BIOBANCO_OPERADOR, PerfilUsuario.BIOBANCO_GESTOR), controller.atualizar.bind(controller));
 
 export { router as remessaRoutes };

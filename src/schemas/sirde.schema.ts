@@ -29,7 +29,7 @@ export const clinicaSchema = z.object({
 export const dentistaSchema = z.object({
   nome: z.string().trim().min(2),
   cro: z.string().trim().min(3),
-  ufCro: z.string().trim().length(2).transform((uf) => uf.toUpperCase()),
+  ufCro: z.string().trim().length(2).transform((uf) => uf.toUpperCase()).optional(),
   email: z.string().trim().email().optional(),
   telefone: optionalText,
   clinicaId: z.string().uuid().optional()

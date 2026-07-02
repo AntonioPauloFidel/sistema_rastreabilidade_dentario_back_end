@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcrypt';
+import { Prisma } from '@prisma/client';
 import { prisma } from '../prisma/client';
 import { AppError } from '../errors/app-error';
 import { usuarioPublicSelect } from '../prisma/selects';
@@ -80,6 +81,9 @@ export class UsuarioController {
 
       return res.status(201).json({ usuario });
     } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        return next(new AppError('E-mail ja cadastrado', 409));
+      }
       return next(error);
     }
   }
