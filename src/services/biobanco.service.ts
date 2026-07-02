@@ -55,6 +55,48 @@ export class DoadorService {
     if (!doador) throw new AppError('Doador nao encontrado', 404);
     return doador;
   }
+
+  async listar(filters?: { page?: number; limit?: number }) {
+    const page = filters?.page ?? 1;
+    const limit = filters?.limit ?? 20;
+    const total = await prisma.doador.count();
+
+    const data = await prisma.doador.findMany({
+      orderBy: { criadoEm: 'desc' },
+      skip: (page - 1) * limit,
+      take: limit
+    });
+
+    return { data, total };
+  }
+
+  async buscarPorCpf(cpf: string) {
+    const cpfHash = hashCpf(onlyDigits(cpf));
+    const doador = await prisma.doador.findFirst({ where: { cpfHash }, include: { dentes: true, termos: true } });
+    if (!doador) throw new AppError('Doador nao encontrado', 404);
+    return doador;
+  }
+
+  async atualizar(id: string, data: DoadorInput, usuarioId?: string) {
+    try {
+      const updateData: any = {};
+      if (data.cpf) {
+        const cpf = onlyDigits(data.cpf);
+        updateData.cpfHash = hashCpf(cpf);
+        updateData.cpfUltimos4 = cpf.slice(-4);
+      }
+      if (data.nome !== undefined) updateData.nome = data.nome;
+      if (data.dataNascimento !== undefined) updateData.dataNascimento = data.dataNascimento;
+      if (data.contato !== undefined) updateData.contato = data.contato;
+
+      const doador = await prisma.doador.update({ where: { id }, data: updateData });
+      await auditoriaService.registrar({ usuarioId, acao: 'ATUALIZAR_DOADOR', entidade: 'Doador', entidadeId: doador.id });
+      return doador;
+    } catch (error) {
+      if (isUniqueConstraintError(error)) throw new AppError('Doador ja cadastrado para este CPF', 409);
+      throw error;
+    }
+  }
 }
 
 export class TermoConsentimentoService {
@@ -140,8 +182,10 @@ export class DenteService {
   }
 
   async buscarPorId(id: string) {
-    const dente = await prisma.dente.findUnique({
-      where: { id },
+    const dente = await prisma.dente.findFirst({
+      where: {
+        OR: [{ id }, { codigoRastreio: id }]
+      },
       include: {
         doador: true,
         remessa: true,

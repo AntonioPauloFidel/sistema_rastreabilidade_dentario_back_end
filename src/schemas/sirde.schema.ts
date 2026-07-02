@@ -6,6 +6,10 @@ export const idParamSchema = z.object({
   id: z.string().uuid('ID invalido')
 });
 
+export const denteIdParamSchema = z.object({
+  id: z.string().min(1, 'ID invalido')
+});
+
 export const instituicaoSchema = z.object({
   nome: z.string().trim().min(2),
   tipo: z.enum(['ESCOLA', 'FACULDADE', 'UNIVERSIDADE', 'LABORATORIO', 'EMPRESA', 'SUS', 'OUTRA']),
@@ -44,6 +48,7 @@ export const doadorSchema = z.object({
   dataNascimento: z.coerce.date().optional(),
   contato: optionalText
 });
+
 
 export const termoSchema = z.object({
   doadorId: z.string().uuid(),
@@ -153,6 +158,10 @@ export const paginationQuerySchema = z.object({
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().default(20)
 });
+
+export const doadorListQuerySchema = paginationQuerySchema;
+
+export const cpfParamSchema = z.object({ cpf: z.string().trim().min(11) });
 
 export const denteListQuerySchema = z.object({
   status: alterarStatusDenteSchema.shape.statusNovo.optional(),
