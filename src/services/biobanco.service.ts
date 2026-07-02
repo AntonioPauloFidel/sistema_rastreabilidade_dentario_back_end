@@ -129,7 +129,8 @@ export class RemessaEntradaService {
   }
 
   async criar(data: RemessaInput) {
-    return prisma.remessaEntrada.create({ data });
+    const codigo = data.codigo ?? `REM-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`;
+    return prisma.remessaEntrada.create({ data: { ...data, codigo } });
   }
 
   async atualizar(id: string, data: RemessaInput) {

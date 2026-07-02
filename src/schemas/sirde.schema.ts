@@ -60,7 +60,7 @@ export const termoSchema = z.object({
 });
 
 export const remessaSchema = z.object({
-  codigo: z.string().trim().min(3),
+  codigo: z.string().trim().min(3).optional(),
   origemTipo: z.string().trim().min(2),
   dataEnvio: z.coerce.date().optional(),
   dataRecebimento: z.coerce.date().optional(),
