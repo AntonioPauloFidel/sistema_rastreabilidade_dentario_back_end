@@ -127,7 +127,8 @@ export const solicitacaoSchema = z.object({
     z.object({
       tipoDente: denteSchema.shape.tipo,
       quantidade: z.coerce.number().int().positive(),
-      requisitos: optionalText
+      requisitos: optionalText,
+      denteId: z.string().uuid().optional()
     })
   ).min(1)
 });
