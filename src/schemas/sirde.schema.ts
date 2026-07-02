@@ -49,6 +49,7 @@ export const doadorSchema = z.object({
   contato: optionalText
 });
 
+
 export const termoSchema = z.object({
   doadorId: z.string().uuid(),
   tipo: z.string().trim().min(2),
@@ -157,6 +158,10 @@ export const paginationQuerySchema = z.object({
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().default(20)
 });
+
+export const doadorListQuerySchema = paginationQuerySchema;
+
+export const cpfParamSchema = z.object({ cpf: z.string().trim().min(11) });
 
 export const denteListQuerySchema = z.object({
   status: alterarStatusDenteSchema.shape.statusNovo.optional(),
