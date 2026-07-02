@@ -77,7 +77,8 @@ export class AuthService {
         usuario: {
           select: {
             senhaHash: true,
-            perfil: true
+            perfil: true,
+            instituicaoId: true
           }
         }
       }
@@ -122,7 +123,8 @@ export class AuthService {
         ativo: true,
         usuario: {
           select: {
-            perfil: true
+            perfil: true,
+            instituicaoId: true
           }
         }
       }
@@ -147,7 +149,8 @@ export class AuthService {
       usuario: {
         id: pessoa.id,
         email: pessoa.email,
-        perfil: pessoa.usuario.perfil
+        perfil: pessoa.usuario.perfil,
+        instituicaoId: pessoa.usuario.instituicaoId ?? undefined
       }
     };
   }
@@ -182,7 +185,7 @@ export class AuthService {
     if (!usuario) throw new AppError('Usuario nao encontrado', 404);
 
     const senhaValida = await bcrypt.compare(data.senhaAtual, usuario.senhaHash);
-    if (!senhaValida) throw new AppError('Senha atual incorreta', 401);
+    if (!senhaValida) throw new AppError('Senha atual incorreta', 400);
 
     const novaSenhaHash = await bcrypt.hash(data.novaSenha, env.BCRYPT_SALT_ROUNDS);
     await prisma.usuario.update({ where: { id: usuarioId }, data: { senhaHash: novaSenhaHash } });

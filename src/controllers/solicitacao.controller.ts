@@ -17,7 +17,7 @@ export class SolicitacaoController {
   async listar(req: Request, res: Response, next: NextFunction) {
     try {
       const filtros = solicitacaoListQuerySchema.parse(req.query);
-      const result = await solicitacaoService.listar(filtros);
+      const result = await solicitacaoService.listar(filtros, req.usuario?.instituicaoId);
       return res.status(200).json(paginatedResponse(result, { page: filtros.page, limit: filtros.limit }));
     } catch (error) {
       return next(error);

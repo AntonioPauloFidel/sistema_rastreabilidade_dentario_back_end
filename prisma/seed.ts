@@ -13,6 +13,68 @@ function hashCpf(cpf: string) {
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
 const prisma = new PrismaClient({ adapter } as any);
 
+// IDs fixos em formato UUID para idempotência do seed
+const ID = {
+  // Usuários
+  admin:    'a0000000-0000-4000-8000-000000000001',
+  gestor:   'a0000000-0000-4000-8000-000000000002',
+  operador: 'a0000000-0000-4000-8000-000000000003',
+  auditor:  'a0000000-0000-4000-8000-000000000004',
+  instUser: 'a0000000-0000-4000-8000-000000000005',
+  // Configuração
+  config:   'b0000000-0000-4000-8000-000000000001',
+  // Clínicas
+  clinica1: 'c0000000-0000-4000-8000-000000000001',
+  clinica2: 'c0000000-0000-4000-8000-000000000002',
+  // Dentistas
+  dent1:    'd0000000-0000-4000-8000-000000000001',
+  dent2:    'd0000000-0000-4000-8000-000000000002',
+  dent3:    'd0000000-0000-4000-8000-000000000003',
+  // Doadores
+  doador1:  'e0000000-0000-4000-8000-000000000001',
+  doador2:  'e0000000-0000-4000-8000-000000000002',
+  doador3:  'e0000000-0000-4000-8000-000000000003',
+  // Termos
+  termo1:   'f0000000-0000-4000-8000-000000000001',
+  termo2:   'f0000000-0000-4000-8000-000000000002',
+  termo3:   'f0000000-0000-4000-8000-000000000003',
+  // Locais
+  local1:   '10000000-0000-4000-8000-000000000001',
+  local2:   '10000000-0000-4000-8000-000000000002',
+  local3:   '10000000-0000-4000-8000-000000000003',
+  local4:   '10000000-0000-4000-8000-000000000004',
+  // Dentes
+  dente1:   '20000000-0000-4000-8000-000000000001',
+  dente2:   '20000000-0000-4000-8000-000000000002',
+  dente3:   '20000000-0000-4000-8000-000000000003',
+  dente4:   '20000000-0000-4000-8000-000000000004',
+  dente5:   '20000000-0000-4000-8000-000000000005',
+  dente6:   '20000000-0000-4000-8000-000000000006',
+  dente7:   '20000000-0000-4000-8000-000000000007',
+  dente8:   '20000000-0000-4000-8000-000000000008',
+  dente9:   '20000000-0000-4000-8000-000000000009',
+  dente10:  '20000000-0000-4000-8000-000000000010',
+  dente11:  '20000000-0000-4000-8000-000000000011',
+  dente12:  '20000000-0000-4000-8000-000000000012',
+  dente13:  '20000000-0000-4000-8000-000000000013',
+  dente14:  '20000000-0000-4000-8000-000000000014',
+  dente15:  '20000000-0000-4000-8000-000000000015',
+  // Solicitações
+  sol1:     '30000000-0000-4000-8000-000000000001',
+  sol2:     '30000000-0000-4000-8000-000000000002',
+  sol3:     '30000000-0000-4000-8000-000000000003',
+  // Cessão
+  cessao1:  '40000000-0000-4000-8000-000000000001',
+  // Movimentações
+  movm1:    '50000000-0000-4000-8000-000000000001',
+  movm2:    '50000000-0000-4000-8000-000000000002',
+  movm3:    '50000000-0000-4000-8000-000000000003',
+  movm4:    '50000000-0000-4000-8000-000000000004',
+  movm5:    '50000000-0000-4000-8000-000000000005',
+  movm6:    '50000000-0000-4000-8000-000000000006',
+  movm7:    '50000000-0000-4000-8000-000000000007',
+};
+
 async function main() {
   console.log('Iniciando seed...');
 
@@ -20,10 +82,10 @@ async function main() {
   const senhaHash = await bcrypt.hash('Senha@123', 10);
 
   const admin = await prisma.usuario.upsert({
-    where: { id: 'seed-admin-0001' },
+    where: { id: ID.admin },
     update: {},
     create: {
-      id: 'seed-admin-0001',
+      id: ID.admin,
       senhaHash,
       perfil: PerfilUsuario.ADMIN,
       pessoa: { create: { nome: 'Admin SIRDE', email: 'admin@sirde.com' } },
@@ -31,10 +93,10 @@ async function main() {
   });
 
   const gestor = await prisma.usuario.upsert({
-    where: { id: 'seed-gestor-001' },
+    where: { id: ID.gestor },
     update: {},
     create: {
-      id: 'seed-gestor-001',
+      id: ID.gestor,
       senhaHash,
       perfil: PerfilUsuario.BIOBANCO_GESTOR,
       pessoa: { create: { nome: 'Maria Gestora', email: 'gestora@sirde.com' } },
@@ -42,10 +104,10 @@ async function main() {
   });
 
   const operador = await prisma.usuario.upsert({
-    where: { id: 'seed-operad-001' },
+    where: { id: ID.operador },
     update: {},
     create: {
-      id: 'seed-operad-001',
+      id: ID.operador,
       senhaHash,
       perfil: PerfilUsuario.BIOBANCO_OPERADOR,
       pessoa: { create: { nome: 'João Operador', email: 'operador@sirde.com' } },
@@ -53,24 +115,25 @@ async function main() {
   });
 
   const auditor = await prisma.usuario.upsert({
-    where: { id: 'seed-audito-001' },
+    where: { id: ID.auditor },
     update: {},
     create: {
-      id: 'seed-audito-001',
+      id: ID.auditor,
       senhaHash,
       perfil: PerfilUsuario.AUDITOR,
       pessoa: { create: { nome: 'Carlos Auditor', email: 'auditor@sirde.com' } },
     },
   });
 
-  console.log('✓ Usuários criados');
+  // usuário de instituição — criado após as instituições serem inseridas
+  console.log('✓ Usuários criados (parcial — instUser criado após instituições)');
 
   // ── Configuração do biobanco ─────────────────────────────────────────────────
   await prisma.configuracaoBiobanco.upsert({
-    where: { id: 'seed-config-0001' },
+    where: { id: ID.config },
     update: {},
     create: {
-      id: 'seed-config-0001',
+      id: ID.config,
       nomeOficial: 'Biobanco de Dentes Humanos da UnB',
       sigla: 'BDH-UnB',
       responsavelTecnico: 'Prof. Dr. Ricardo Alves',
@@ -118,14 +181,26 @@ async function main() {
     },
   });
 
-  console.log('✓ Instituições criadas');
+  await prisma.usuario.upsert({
+    where: { id: ID.instUser },
+    update: {},
+    create: {
+      id: ID.instUser,
+      senhaHash,
+      perfil: PerfilUsuario.INSTITUICAO_SOLICITANTE,
+      instituicaoId: inst1.id,
+      pessoa: { create: { nome: 'Representante FOB', email: 'representante@fob.edu.br' } },
+    },
+  });
+
+  console.log('✓ Instituições e usuário institucional criados');
 
   // ── Clínicas ─────────────────────────────────────────────────────────────────
   const clinica1 = await prisma.clinica.upsert({
-    where: { id: 'seed-clinic-0001' },
+    where: { id: ID.clinica1 },
     update: {},
     create: {
-      id: 'seed-clinic-0001',
+      id: ID.clinica1,
       nome: 'Clínica Sorriso Pleno',
       cnpj: '55667788000111',
       responsavel: 'Dr. Paulo Mendes',
@@ -135,10 +210,10 @@ async function main() {
   });
 
   const clinica2 = await prisma.clinica.upsert({
-    where: { id: 'seed-clinic-0002' },
+    where: { id: ID.clinica2 },
     update: {},
     create: {
-      id: 'seed-clinic-0002',
+      id: ID.clinica2,
       nome: 'OdontoCenter Asa Sul',
       cnpj: '99887766000122',
       responsavel: 'Dra. Ana Lima',
@@ -150,11 +225,11 @@ async function main() {
   console.log('✓ Clínicas criadas');
 
   // ── Dentistas ─────────────────────────────────────────────────────────────────
-  const dent1 = await prisma.dentista.upsert({
-    where: { id: 'seed-dentis-0001' },
+  await prisma.dentista.upsert({
+    where: { id: ID.dent1 },
     update: {},
     create: {
-      id: 'seed-dentis-0001',
+      id: ID.dent1,
       nome: 'Dr. Paulo Mendes',
       cro: 'DF-12345',
       ufCro: 'DF',
@@ -164,11 +239,11 @@ async function main() {
     },
   });
 
-  const dent2 = await prisma.dentista.upsert({
-    where: { id: 'seed-dentis-0002' },
+  await prisma.dentista.upsert({
+    where: { id: ID.dent2 },
     update: {},
     create: {
-      id: 'seed-dentis-0002',
+      id: ID.dent2,
       nome: 'Dra. Ana Lima',
       cro: 'DF-54321',
       ufCro: 'DF',
@@ -178,11 +253,11 @@ async function main() {
     },
   });
 
-  const dent3 = await prisma.dentista.upsert({
-    where: { id: 'seed-dentis-0003' },
+  await prisma.dentista.upsert({
+    where: { id: ID.dent3 },
     update: {},
     create: {
-      id: 'seed-dentis-0003',
+      id: ID.dent3,
       nome: 'Dr. Felipe Souza',
       cro: 'DF-99001',
       ufCro: 'DF',
@@ -198,7 +273,7 @@ async function main() {
     where: { cpfHash: hashCpf('12345678901') },
     update: {},
     create: {
-      id: 'seed-doador-0001',
+      id: ID.doador1,
       cpfHash: hashCpf('12345678901'),
       cpfUltimos4: '8901',
       nome: 'Roberto Ferreira',
@@ -211,7 +286,7 @@ async function main() {
     where: { cpfHash: hashCpf('98765432100') },
     update: {},
     create: {
-      id: 'seed-doador-0002',
+      id: ID.doador2,
       cpfHash: hashCpf('98765432100'),
       cpfUltimos4: '2100',
       nome: 'Cláudia Santos',
@@ -224,7 +299,7 @@ async function main() {
     where: { cpfHash: hashCpf('11122233344') },
     update: {},
     create: {
-      id: 'seed-doador-0003',
+      id: ID.doador3,
       cpfHash: hashCpf('11122233344'),
       cpfUltimos4: '3344',
       nome: 'Marcos Oliveira',
@@ -237,10 +312,10 @@ async function main() {
 
   // ── Termos de consentimento ──────────────────────────────────────────────────
   await prisma.termoConsentimento.upsert({
-    where: { id: 'seed-termo-00001' },
+    where: { id: ID.termo1 },
     update: {},
     create: {
-      id: 'seed-termo-00001',
+      id: ID.termo1,
       doadorId: doador1.id,
       tipo: 'DOACAO_DENTES',
       versao: '2.0',
@@ -250,10 +325,10 @@ async function main() {
   });
 
   await prisma.termoConsentimento.upsert({
-    where: { id: 'seed-termo-00002' },
+    where: { id: ID.termo2 },
     update: {},
     create: {
-      id: 'seed-termo-00002',
+      id: ID.termo2,
       doadorId: doador2.id,
       tipo: 'DOACAO_DENTES',
       versao: '2.0',
@@ -262,10 +337,10 @@ async function main() {
   });
 
   await prisma.termoConsentimento.upsert({
-    where: { id: 'seed-termo-00003' },
+    where: { id: ID.termo3 },
     update: {},
     create: {
-      id: 'seed-termo-00003',
+      id: ID.termo3,
       doadorId: doador3.id,
       tipo: 'DOACAO_DENTES',
       versao: '2.1',
@@ -278,10 +353,10 @@ async function main() {
 
   // ── Locais de armazenamento ──────────────────────────────────────────────────
   const local1 = await prisma.localArmazenamento.upsert({
-    where: { id: 'seed-local-00001' },
+    where: { id: ID.local1 },
     update: {},
     create: {
-      id: 'seed-local-00001',
+      id: ID.local1,
       nome: 'Freezer A',
       tipo: 'FREEZER',
       sala: 'Sala 101',
@@ -292,10 +367,10 @@ async function main() {
   });
 
   const local2 = await prisma.localArmazenamento.upsert({
-    where: { id: 'seed-local-00002' },
+    where: { id: ID.local2 },
     update: {},
     create: {
-      id: 'seed-local-00002',
+      id: ID.local2,
       nome: 'Freezer B',
       tipo: 'FREEZER',
       sala: 'Sala 101',
@@ -306,10 +381,10 @@ async function main() {
   });
 
   const local3 = await prisma.localArmazenamento.upsert({
-    where: { id: 'seed-local-00003' },
+    where: { id: ID.local3 },
     update: {},
     create: {
-      id: 'seed-local-00003',
+      id: ID.local3,
       nome: 'Estufa de Esterilização',
       tipo: 'ESTUFA',
       sala: 'Sala 102',
@@ -317,10 +392,10 @@ async function main() {
   });
 
   const local4 = await prisma.localArmazenamento.upsert({
-    where: { id: 'seed-local-00004' },
+    where: { id: ID.local4 },
     update: {},
     create: {
-      id: 'seed-local-00004',
+      id: ID.local4,
       nome: 'Bancada de Triagem',
       tipo: 'BANCADA',
       sala: 'Sala 103',
@@ -369,24 +444,21 @@ async function main() {
 
   // ── Dentes ───────────────────────────────────────────────────────────────────
   const dentesData = [
-    // Remessa 1 — Clínica Sorriso Pleno
-    { id: 'seed-dente-00001', codigo: 'BDH-2025-0001', tipo: TipoDente.INCISIVO,  condicao: CondicaoDente.INTEGRO,     status: StatusDente.ARMAZENADO,  local: local1.id, remessa: remessa1.id, doador: doador1.id, numeracao: '11' },
-    { id: 'seed-dente-00002', codigo: 'BDH-2025-0002', tipo: TipoDente.INCISIVO,  condicao: CondicaoDente.INTEGRO,     status: StatusDente.ARMAZENADO,  local: local1.id, remessa: remessa1.id, doador: doador1.id, numeracao: '21' },
-    { id: 'seed-dente-00003', codigo: 'BDH-2025-0003', tipo: TipoDente.CANINO,    condicao: CondicaoDente.RESTAURADO,  status: StatusDente.HIGIENIZADO, local: local4.id, remessa: remessa1.id, doador: doador1.id, numeracao: '13' },
-    { id: 'seed-dente-00004', codigo: 'BDH-2025-0004', tipo: TipoDente.MOLAR,     condicao: CondicaoDente.CARIADO,     status: StatusDente.EM_TRIAGEM,  local: local4.id, remessa: remessa1.id, doador: doador1.id, numeracao: '36' },
-    { id: 'seed-dente-00005', codigo: 'BDH-2025-0005', tipo: TipoDente.PRE_MOLAR, condicao: CondicaoDente.INTEGRO,     status: StatusDente.ESTERILIZADO, local: local3.id, remessa: remessa1.id, doador: doador1.id, numeracao: '14' },
-    // Remessa 2 — OdontoCenter
-    { id: 'seed-dente-00006', codigo: 'BDH-2025-0006', tipo: TipoDente.MOLAR,     condicao: CondicaoDente.INTEGRO,     status: StatusDente.ARMAZENADO,  local: local2.id, remessa: remessa2.id, doador: doador2.id, numeracao: '46' },
-    { id: 'seed-dente-00007', codigo: 'BDH-2025-0007', tipo: TipoDente.MOLAR,     condicao: CondicaoDente.FRAGMENTADO, status: StatusDente.DESCARTADO,  local: null,      remessa: remessa2.id, doador: doador2.id, numeracao: '47' },
-    { id: 'seed-dente-00008', codigo: 'BDH-2025-0008', tipo: TipoDente.DECIDUO,   condicao: CondicaoDente.INTEGRO,     status: StatusDente.ARMAZENADO,  local: local2.id, remessa: remessa2.id, doador: doador2.id, numeracao: '51' },
-    { id: 'seed-dente-00009', codigo: 'BDH-2025-0009', tipo: TipoDente.DECIDUO,   condicao: CondicaoDente.INTEGRO,     status: StatusDente.ARMAZENADO,  local: local2.id, remessa: remessa2.id, doador: doador2.id, numeracao: '52' },
-    { id: 'seed-dente-00010', codigo: 'BDH-2025-0010', tipo: TipoDente.CANINO,    condicao: CondicaoDente.INTEGRO,     status: StatusDente.RESERVADO,   local: local1.id, remessa: remessa2.id, doador: doador2.id, numeracao: '23' },
-    // Remessa 3 — Doação direta
-    { id: 'seed-dente-00011', codigo: 'BDH-2025-0011', tipo: TipoDente.INCISIVO,  condicao: CondicaoDente.INTEGRO,     status: StatusDente.RECEBIDO,    local: null,      remessa: remessa3.id, doador: doador3.id, numeracao: '12' },
-    { id: 'seed-dente-00012', codigo: 'BDH-2025-0012', tipo: TipoDente.PRE_MOLAR, condicao: CondicaoDente.RESTAURADO,  status: StatusDente.HIGIENIZADO, local: local4.id, remessa: remessa3.id, doador: doador3.id, numeracao: '24' },
-    { id: 'seed-dente-00013', codigo: 'BDH-2025-0013', tipo: TipoDente.MOLAR,     condicao: CondicaoDente.INTEGRO,     status: StatusDente.ESTERILIZADO, local: local3.id, remessa: remessa3.id, doador: doador3.id, numeracao: '37' },
-    { id: 'seed-dente-00014', codigo: 'BDH-2025-0014', tipo: TipoDente.INCISIVO,  condicao: CondicaoDente.INTEGRO,     status: StatusDente.CEDIDO,      local: null,      remessa: remessa3.id, doador: doador3.id, numeracao: '22' },
-    { id: 'seed-dente-00015', codigo: 'BDH-2025-0015', tipo: TipoDente.CANINO,    condicao: CondicaoDente.CARIADO,     status: StatusDente.EM_TRIAGEM,  local: local4.id, remessa: remessa3.id, doador: doador3.id, numeracao: '43' },
+    { id: ID.dente1,  codigo: 'BDH-2025-0001', tipo: TipoDente.INCISIVO,  condicao: CondicaoDente.INTEGRO,    status: StatusDente.ARMAZENADO,   local: local1.id, remessa: remessa1.id, doador: doador1.id, numeracao: '11' },
+    { id: ID.dente2,  codigo: 'BDH-2025-0002', tipo: TipoDente.INCISIVO,  condicao: CondicaoDente.INTEGRO,    status: StatusDente.ARMAZENADO,   local: local1.id, remessa: remessa1.id, doador: doador1.id, numeracao: '21' },
+    { id: ID.dente3,  codigo: 'BDH-2025-0003', tipo: TipoDente.CANINO,    condicao: CondicaoDente.RESTAURADO, status: StatusDente.HIGIENIZADO,  local: local4.id, remessa: remessa1.id, doador: doador1.id, numeracao: '13' },
+    { id: ID.dente4,  codigo: 'BDH-2025-0004', tipo: TipoDente.MOLAR,     condicao: CondicaoDente.CARIADO,    status: StatusDente.EM_TRIAGEM,   local: local4.id, remessa: remessa1.id, doador: doador1.id, numeracao: '36' },
+    { id: ID.dente5,  codigo: 'BDH-2025-0005', tipo: TipoDente.PRE_MOLAR, condicao: CondicaoDente.INTEGRO,    status: StatusDente.ESTERILIZADO, local: local3.id, remessa: remessa1.id, doador: doador1.id, numeracao: '14' },
+    { id: ID.dente6,  codigo: 'BDH-2025-0006', tipo: TipoDente.MOLAR,     condicao: CondicaoDente.INTEGRO,    status: StatusDente.ARMAZENADO,   local: local2.id, remessa: remessa2.id, doador: doador2.id, numeracao: '46' },
+    { id: ID.dente7,  codigo: 'BDH-2025-0007', tipo: TipoDente.MOLAR,     condicao: CondicaoDente.FRAGMENTADO,status: StatusDente.DESCARTADO,   local: null,      remessa: remessa2.id, doador: doador2.id, numeracao: '47' },
+    { id: ID.dente8,  codigo: 'BDH-2025-0008', tipo: TipoDente.DECIDUO,   condicao: CondicaoDente.INTEGRO,    status: StatusDente.ARMAZENADO,   local: local2.id, remessa: remessa2.id, doador: doador2.id, numeracao: '51' },
+    { id: ID.dente9,  codigo: 'BDH-2025-0009', tipo: TipoDente.DECIDUO,   condicao: CondicaoDente.INTEGRO,    status: StatusDente.ARMAZENADO,   local: local2.id, remessa: remessa2.id, doador: doador2.id, numeracao: '52' },
+    { id: ID.dente10, codigo: 'BDH-2025-0010', tipo: TipoDente.CANINO,    condicao: CondicaoDente.INTEGRO,    status: StatusDente.RESERVADO,    local: local1.id, remessa: remessa2.id, doador: doador2.id, numeracao: '23' },
+    { id: ID.dente11, codigo: 'BDH-2025-0011', tipo: TipoDente.INCISIVO,  condicao: CondicaoDente.INTEGRO,    status: StatusDente.RECEBIDO,     local: null,      remessa: remessa3.id, doador: doador3.id, numeracao: '12' },
+    { id: ID.dente12, codigo: 'BDH-2025-0012', tipo: TipoDente.PRE_MOLAR, condicao: CondicaoDente.RESTAURADO, status: StatusDente.HIGIENIZADO,  local: local4.id, remessa: remessa3.id, doador: doador3.id, numeracao: '24' },
+    { id: ID.dente13, codigo: 'BDH-2025-0013', tipo: TipoDente.MOLAR,     condicao: CondicaoDente.INTEGRO,    status: StatusDente.ESTERILIZADO, local: local3.id, remessa: remessa3.id, doador: doador3.id, numeracao: '37' },
+    { id: ID.dente14, codigo: 'BDH-2025-0014', tipo: TipoDente.INCISIVO,  condicao: CondicaoDente.INTEGRO,    status: StatusDente.CEDIDO,       local: null,      remessa: remessa3.id, doador: doador3.id, numeracao: '22' },
+    { id: ID.dente15, codigo: 'BDH-2025-0015', tipo: TipoDente.CANINO,    condicao: CondicaoDente.CARIADO,    status: StatusDente.EM_TRIAGEM,   local: local4.id, remessa: remessa3.id, doador: doador3.id, numeracao: '43' },
   ];
 
   for (const d of dentesData) {
@@ -411,10 +483,10 @@ async function main() {
 
   // ── Solicitações ─────────────────────────────────────────────────────────────
   const sol1 = await prisma.solicitacaoDente.upsert({
-    where: { id: 'seed-solici-00001' },
+    where: { id: ID.sol1 },
     update: {},
     create: {
-      id: 'seed-solici-00001',
+      id: ID.sol1,
       instituicaoId: inst1.id,
       finalidade: FinalidadeSolicitacao.ENSINO,
       justificativa: 'Necessitamos de dentes para aulas práticas de endodontia no curso de graduação.',
@@ -429,11 +501,11 @@ async function main() {
     },
   });
 
-  const sol2 = await prisma.solicitacaoDente.upsert({
-    where: { id: 'seed-solici-00002' },
+  await prisma.solicitacaoDente.upsert({
+    where: { id: ID.sol2 },
     update: {},
     create: {
-      id: 'seed-solici-00002',
+      id: ID.sol2,
       instituicaoId: inst2.id,
       finalidade: FinalidadeSolicitacao.PESQUISA,
       justificativa: 'Pesquisa sobre resistência de materiais restauradores em dentes naturais. Projeto aprovado pelo CEP.',
@@ -447,14 +519,14 @@ async function main() {
     },
   });
 
-  const sol3 = await prisma.solicitacaoDente.upsert({
-    where: { id: 'seed-solici-00003' },
+  await prisma.solicitacaoDente.upsert({
+    where: { id: ID.sol3 },
     update: {},
     create: {
-      id: 'seed-solici-00003',
+      id: ID.sol3,
       instituicaoId: inst3.id,
       finalidade: FinalidadeSolicitacao.TREINAMENTO,
-      justificativa: 'Treinamento de técnicos em radiologia odontológica. Necessitamos de dentes para simulação em manequim.',
+      justificativa: 'Treinamento de técnicos em radiologia odontológica.',
       status: StatusSolicitacao.RECUSADA,
       motivoDecisao: 'Documentação incompleta. Reenviar com aprovação do coordenador.',
       itens: {
@@ -470,13 +542,13 @@ async function main() {
 
   // ── Cessão ───────────────────────────────────────────────────────────────────
   await prisma.cessaoDente.upsert({
-    where: { id: 'seed-cessao-00001' },
+    where: { id: ID.cessao1 },
     update: {},
     create: {
-      id: 'seed-cessao-00001',
+      id: ID.cessao1,
       solicitacaoId: sol1.id,
       instituicaoId: inst1.id,
-      denteId: 'seed-dente-00014',
+      denteId: ID.dente14,
       prazoUso: new Date('2026-12-31'),
       observacao: 'Dente cedido para uso em aula prática de endodontia — Turma 2025/2.',
     },
@@ -488,64 +560,13 @@ async function main() {
   await prisma.movimentacaoDente.createMany({
     skipDuplicates: true,
     data: [
-      {
-        id: 'seed-movm-000001',
-        denteId: 'seed-dente-00001',
-        statusNovo: StatusDente.RECEBIDO,
-        motivo: 'Entrada via remessa REM-2025-001',
-        responsavelId: operador.id,
-        criadoEm: new Date('2025-02-03'),
-      },
-      {
-        id: 'seed-movm-000002',
-        denteId: 'seed-dente-00001',
-        statusNovo: StatusDente.HIGIENIZADO,
-        motivo: 'Higienização realizada conforme protocolo',
-        responsavelId: operador.id,
-        criadoEm: new Date('2025-02-05'),
-      },
-      {
-        id: 'seed-movm-000003',
-        denteId: 'seed-dente-00001',
-        statusNovo: StatusDente.ESTERILIZADO,
-        motivo: 'Esterilização em estufa a 180°C por 1 hora',
-        destinoLocalId: local3.id,
-        responsavelId: operador.id,
-        criadoEm: new Date('2025-02-06'),
-      },
-      {
-        id: 'seed-movm-000004',
-        denteId: 'seed-dente-00001',
-        statusNovo: StatusDente.ARMAZENADO,
-        motivo: 'Transferido para armazenamento permanente',
-        destinoLocalId: local1.id,
-        responsavelId: gestor.id,
-        criadoEm: new Date('2025-02-07'),
-      },
-      {
-        id: 'seed-movm-000005',
-        denteId: 'seed-dente-00007',
-        statusNovo: StatusDente.RECEBIDO,
-        motivo: 'Entrada via remessa REM-2025-002',
-        responsavelId: operador.id,
-        criadoEm: new Date('2025-04-12'),
-      },
-      {
-        id: 'seed-movm-000006',
-        denteId: 'seed-dente-00007',
-        statusNovo: StatusDente.DESCARTADO,
-        motivo: 'Dente fragmentado sem condições de uso',
-        responsavelId: gestor.id,
-        criadoEm: new Date('2025-04-13'),
-      },
-      {
-        id: 'seed-movm-000007',
-        denteId: 'seed-dente-00014',
-        statusNovo: StatusDente.CEDIDO,
-        motivo: 'Cedido à Faculdade de Odontologia de Brasília — Sol. seed-solici-00001',
-        responsavelId: gestor.id,
-        criadoEm: new Date('2025-06-15'),
-      },
+      { id: ID.movm1, denteId: ID.dente1,  statusNovo: StatusDente.RECEBIDO,     motivo: 'Entrada via remessa REM-2025-001',                responsavelId: operador.id, criadoEm: new Date('2025-02-03') },
+      { id: ID.movm2, denteId: ID.dente1,  statusNovo: StatusDente.HIGIENIZADO,  motivo: 'Higienização realizada conforme protocolo',        responsavelId: operador.id, criadoEm: new Date('2025-02-05') },
+      { id: ID.movm3, denteId: ID.dente1,  statusNovo: StatusDente.ESTERILIZADO, motivo: 'Esterilização em estufa a 180°C por 1 hora',      destinoLocalId: local3.id, responsavelId: operador.id, criadoEm: new Date('2025-02-06') },
+      { id: ID.movm4, denteId: ID.dente1,  statusNovo: StatusDente.ARMAZENADO,   motivo: 'Transferido para armazenamento permanente',       destinoLocalId: local1.id, responsavelId: gestor.id,   criadoEm: new Date('2025-02-07') },
+      { id: ID.movm5, denteId: ID.dente7,  statusNovo: StatusDente.RECEBIDO,     motivo: 'Entrada via remessa REM-2025-002',                responsavelId: operador.id, criadoEm: new Date('2025-04-12') },
+      { id: ID.movm6, denteId: ID.dente7,  statusNovo: StatusDente.DESCARTADO,   motivo: 'Dente fragmentado sem condições de uso',          responsavelId: gestor.id,   criadoEm: new Date('2025-04-13') },
+      { id: ID.movm7, denteId: ID.dente14, statusNovo: StatusDente.CEDIDO,       motivo: 'Cedido à Faculdade de Odontologia de Brasília',   responsavelId: gestor.id,   criadoEm: new Date('2025-06-15') },
     ],
   });
 
@@ -553,10 +574,11 @@ async function main() {
 
   console.log('\n✅ Seed concluído com sucesso!\n');
   console.log('Usuários disponíveis (senha: Senha@123):');
-  console.log('  admin@sirde.com       → ADMIN');
-  console.log('  gestora@sirde.com     → BIOBANCO_GESTOR');
-  console.log('  operador@sirde.com    → BIOBANCO_OPERADOR');
-  console.log('  auditor@sirde.com     → AUDITOR');
+  console.log('  admin@sirde.com             → ADMIN');
+  console.log('  gestora@sirde.com           → BIOBANCO_GESTOR');
+  console.log('  operador@sirde.com          → BIOBANCO_OPERADOR');
+  console.log('  auditor@sirde.com           → AUDITOR');
+  console.log('  representante@fob.edu.br    → INSTITUICAO_SOLICITANTE (Faculdade de Odontologia de Brasília)');
 }
 
 main()

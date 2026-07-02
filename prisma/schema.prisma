@@ -78,11 +78,13 @@ enum FinalidadeSolicitacao {
 }
 
 model Usuario {
-  id        String        @id @default(uuid())
-  senhaHash String        @map("senha_hash")
-  perfil    PerfilUsuario @default(BIOBANCO_OPERADOR)
-  pessoa    Pessoa?
-  endereco  Endereco?
+  id            String        @id @default(uuid())
+  senhaHash     String        @map("senha_hash")
+  perfil        PerfilUsuario @default(BIOBANCO_OPERADOR)
+  instituicaoId String?       @map("instituicao_id")
+  instituicao   Instituicao?  @relation(fields: [instituicaoId], references: [id])
+  pessoa        Pessoa?
+  endereco      Endereco?
 
   movimentacoes MovimentacaoDente[] @relation("ResponsavelMovimentacao")
   auditorias    AuditoriaEvento[]
@@ -136,6 +138,7 @@ model Instituicao {
   criadoEm     DateTime       @default(now()) @map("criado_em")
   atualizadoEm DateTime       @updatedAt @map("atualizado_em")
 
+  usuarios     Usuario[]
   solicitacoes SolicitacaoDente[]
   cessoes      CessaoDente[]
 
