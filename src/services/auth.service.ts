@@ -185,7 +185,7 @@ export class AuthService {
     if (!usuario) throw new AppError('Usuario nao encontrado', 404);
 
     const senhaValida = await bcrypt.compare(data.senhaAtual, usuario.senhaHash);
-    if (!senhaValida) throw new AppError('Senha atual incorreta', 401);
+    if (!senhaValida) throw new AppError('Senha atual incorreta', 400);
 
     const novaSenhaHash = await bcrypt.hash(data.novaSenha, env.BCRYPT_SALT_ROUNDS);
     await prisma.usuario.update({ where: { id: usuarioId }, data: { senhaHash: novaSenhaHash } });
