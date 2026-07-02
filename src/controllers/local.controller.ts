@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
-import { localListQuerySchema, localSchema } from '../schemas/sirde.schema';
+import { idParamSchema, localListQuerySchema, localSchema } from '../schemas/sirde.schema';
 import { LocalArmazenamentoService } from '../services/cadastros.service';
 import { paginatedResponse } from '../utils/pagination';
 
@@ -20,6 +20,16 @@ export class LocalController {
     try {
       const data = localSchema.parse(req.body);
       return res.status(201).json({ local: await localService.criar(data) });
+    } catch (error) {
+      return next(error);
+    }
+  }
+
+  async atualizar(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = idParamSchema.parse(req.params);
+      const data = localSchema.parse(req.body);
+      return res.status(200).json({ local: await localService.atualizar(id, data) });
     } catch (error) {
       return next(error);
     }

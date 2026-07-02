@@ -137,9 +137,18 @@ export class DentistaService {
     return dentista;
   }
 
+  private toPayload(data: DentistaInput): any {
+    const payload: Record<string, unknown> = { nome: data.nome, cro: data.cro };
+    if (data.ufCro !== undefined) payload.ufCro = data.ufCro;
+    if (data.email !== undefined) payload.email = data.email;
+    if (data.telefone !== undefined) payload.telefone = data.telefone;
+    if (data.clinicaId !== undefined) payload.clinicaId = data.clinicaId;
+    return payload;
+  }
+
   async criar(data: DentistaInput) {
     try {
-      return await prisma.dentista.create({ data });
+      return await prisma.dentista.create({ data: this.toPayload(data) });
     } catch (error) {
       if (isUniqueConstraintError(error)) throw new AppError('CRO ja cadastrado para esta UF', 409);
       throw error;
@@ -149,7 +158,7 @@ export class DentistaService {
   async atualizar(id: string, data: DentistaInput) {
     await this.buscarPorId(id);
     try {
-      return await prisma.dentista.update({ where: { id }, data });
+      return await prisma.dentista.update({ where: { id }, data: this.toPayload(data) });
     } catch (error) {
       if (isUniqueConstraintError(error)) throw new AppError('CRO ja cadastrado para esta UF', 409);
       throw error;
@@ -179,5 +188,11 @@ export class LocalArmazenamentoService {
 
   async criar(data: LocalInput) {
     return prisma.localArmazenamento.create({ data });
+  }
+
+  async atualizar(id: string, data: LocalInput) {
+    const existe = await prisma.localArmazenamento.findUnique({ where: { id } });
+    if (!existe) throw new AppError('Local nao encontrado', 404);
+    return prisma.localArmazenamento.update({ where: { id }, data });
   }
 }

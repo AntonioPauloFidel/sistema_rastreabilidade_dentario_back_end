@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
-import { remessaListQuerySchema, remessaSchema } from '../schemas/sirde.schema';
+import { idParamSchema, remessaListQuerySchema, remessaSchema } from '../schemas/sirde.schema';
 import { RemessaEntradaService } from '../services/biobanco.service';
 import { paginatedResponse } from '../utils/pagination';
 
@@ -20,6 +20,16 @@ export class RemessaController {
     try {
       const data = remessaSchema.parse(req.body);
       return res.status(201).json({ remessa: await remessaService.criar(data) });
+    } catch (error) {
+      return next(error);
+    }
+  }
+
+  async atualizar(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = idParamSchema.parse(req.params);
+      const data = remessaSchema.parse(req.body);
+      return res.status(200).json({ remessa: await remessaService.atualizar(id, data) });
     } catch (error) {
       return next(error);
     }

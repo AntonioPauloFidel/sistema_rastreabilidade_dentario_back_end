@@ -131,6 +131,12 @@ export class RemessaEntradaService {
   async criar(data: RemessaInput) {
     return prisma.remessaEntrada.create({ data });
   }
+
+  async atualizar(id: string, data: RemessaInput) {
+    const existe = await prisma.remessaEntrada.findUnique({ where: { id } });
+    if (!existe) throw new AppError('Remessa nao encontrada', 404);
+    return prisma.remessaEntrada.update({ where: { id }, data });
+  }
 }
 
 export class DenteService {
