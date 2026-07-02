@@ -68,7 +68,7 @@ export const remessaSchema = z.object({
 });
 
 export const denteSchema = z.object({
-  codigoRastreio: z.string().trim().min(3),
+  codigoRastreio: z.string().trim().min(3).optional(),
   tipo: z.enum(['INCISIVO', 'CANINO', 'PRE_MOLAR', 'MOLAR', 'DECIDUO', 'OUTRO']),
   numeracao: optionalText,
   condicao: z.enum(['INTEGRO', 'RESTAURADO', 'CARIADO', 'FRAGMENTADO', 'OUTRA']),

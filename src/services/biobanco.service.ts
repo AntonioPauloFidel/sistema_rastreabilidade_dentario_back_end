@@ -206,7 +206,8 @@ export class DenteService {
 
   async criar(data: DenteInput, usuarioId?: string) {
     try {
-      const dente = await prisma.dente.create({ data });
+      const codigoRastreio = data.codigoRastreio ?? `DENTE-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`;
+      const dente = await prisma.dente.create({ data: { ...data, codigoRastreio } });
 
       await auditoriaService.registrar({
         usuarioId,
